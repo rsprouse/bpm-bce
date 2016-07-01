@@ -72,7 +72,7 @@ install_version_txt() {
         echo "Edit bpm-update to update VERSION. Exiting."
         exit 1
     fi
-    cat > /home/oski/Desktop/version.txt << EOF
+    cat > /home/ubuntu/Desktop/version.txt << EOF
 $VERSION
 EOF
     echo "Installed version.txt."
@@ -305,7 +305,7 @@ install_splalign(){
     msg="Installing splalign.py. We do not have permission to distribute this software. We will attempt to install from a local .zip file."
     echo $msg
     cd /opt/ && \
-    unzip /home/oski/Desktop/splalign.zip && \
+    unzip /home/ubuntu/Desktop/splalign.zip && \
     ln -s /opt/SPLaligner/HTK_sed_for_octalCrossBasic.sh /usr/local/bin/ && \
     ln -s /opt/SPLaligner/splalign.py /usr/local/bin/ && \
     echo DONE: $msg || echo FAIL: $msg
@@ -326,7 +326,7 @@ EOF
     wget --quiet --output-document="$FNAME" https://github.com/MesquiteProject/MesquiteCore/releases/download/3.01/$FNAME && \
     tar xf $FNAME && \
     chmod +x /opt/Mesquite_Folder/mesquite.sh && \
-    chown -R oski.oski /opt/Mesquite_Folder/ && \
+    chown -R ubuntu.ubuntu /opt/Mesquite_Folder/ && \
     rm $FNAME && \
     echo DONE: $msg || echo FAIL: $msg
     cd $ORIGDIR
