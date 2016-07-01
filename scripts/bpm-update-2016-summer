@@ -6,7 +6,7 @@
 # and do: 
 #
 #    cd /usr/local/bin
-#    sudo https://raw.githubusercontent.com/rsprouse/bpm-bce/master/scripts/bpm-update-2016-summer
+#    sudo wget https://raw.githubusercontent.com/rsprouse/bpm-bce/master/scripts/bpm-update-2016-summer
 #    sudo chmod +x bpm-update-2016-summer
 #    sudo bpm-update-2016-summer bpm-public
 #
