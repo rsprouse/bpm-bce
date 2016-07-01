@@ -212,6 +212,7 @@ ffmpeg
 imagemagick
 praat
 sox
+vim-gtk
 wavesurfer
 
 # opensesame and related packages
