@@ -133,12 +133,10 @@ make_src_dir(){
 # First argument is base github url.
 # Second argument is specific repo (package) on github.
 python_clone_and_setup(){
-    cd /usr/local/src
-    #git clone ${1}/${2}
+    cd /home/ubuntu/src
+    sudo -u ubuntu git clone ${1}/${2}
     cd ${2}
-    sudo -u ubuntu 
-    #sudo -u ubuntu python setup.py install
-    #/home/ubuntu/miniconda3/bin/python setup.py install
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/python setup.py install
     cd ..
 #    rm -rf ${2}
     cd $ORIGDIR
