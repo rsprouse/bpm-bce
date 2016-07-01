@@ -179,20 +179,6 @@ fix_audio_rate(){
     fi
 }
 
-# TODO: check this
-fix_pyalign(){
-    # Fix problem with align.py found after VERSION=BCE-2015-spring-BPM-1-public.
-    FNAME=align.py
-    msg="Fixing align.py."
-    echo $msg
-    cd /opt/p2fa && \
-    cp $FNAME $FNAME.orig && \
-    wget --quiet --output-document="$FNAME" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME && \
-    chmod +x $FNAME && \
-    echo DONE: $msg || echo FAIL: $msg
-    cd $ORIGDIR
-}
-
 install_ecog(){
     FNAME1=ecog_ucsf.py
     FNAME2=htkmfc.py
@@ -400,7 +386,9 @@ install_ucblingmisc(){
     cd /usr/local/bin && \
     wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
     chmod +x $FNAME2 && \
-    fix_pyalign && \
+    cd /opt/p2fa && \  # TODO: check that align.py is correct
+    wget --quiet --output-document="$FNAME3" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME3 && \
+    chmod +x $FNAME3 && \
     echo DONE: $msg || echo FAIL: $msg
     cd $ORIGDIR
 }
@@ -675,9 +663,6 @@ or update:
   r-packages
     A useful set of R packages for linguists.
   
-  fix-pyalign
-    Fix pyalign found in VERSION=BCE-2015-spring-BPM-1-public.
-
   fix-sil
     Fix sil repo found in VERSION=BCE-2015-spring-BPM-2-public.
 
@@ -763,10 +748,6 @@ sources-list)
     ;;
 
 # Individual package install/update.
-fix-pyalign)
-    fix_pyalign
-    ;;
-
 fix-sil)
     fix_sil
     ;;
