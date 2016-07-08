@@ -143,11 +143,11 @@ python_clone_and_setup(){
 }
 
 add_bpm_repositories(){
-    # Add opensesame and sil.org repositories.
+    # Add sil.org repository.
     msg="BPM-BCE: Adding Linguistics repositories..."
     echo "$msg"
     # opensesame repository
-    add-apt-repository ppa:smathot/cogscinl --yes
+    #add-apt-repository ppa:smathot/cogscinl --yes
     # neurodebian; no longer needed for opensesame
     #wget -O- http://neuro.debian.net/lists/xenial.us-ca.full | \
     #tee /etc/apt/sources.list.d/neurodebian.sources.list && \
@@ -182,7 +182,7 @@ install_ecog(){
     FNAME2=htkmfc.py
     msg="Getting ecog_ucsf.py and htkmfc.py"
     echo $msg
-    cd /usr/local/lib/python2.7/dist-packages && \
+    cd /home/ubuntu/miniconda3/lib/python3.5/site-packages && \
     wget --quiet --output-document="$FNAME1" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME1 && \
     wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
     echo DONE: $msg || echo FAIL: $msg
@@ -198,14 +198,6 @@ praat
 sox
 vim-gtk
 wavesurfer
-
-# opensesame and related packages
-opensesame
-gnome-icon-theme-full
-gstreamer0.10-tools
-gstreamer-tools
-gstreamer0.10-plugins-base
-#gstreamer0.10-ffmpeg   # named by media_player_gst on github but not in ubuntu repo
 
 # wish8.5 is needed for wavesurfer but is not installed automatically. This is
 # probably a Depends bug in the wavesurfer package.
@@ -324,11 +316,10 @@ install_klsyn(){
     python_clone_and_setup $GITBASE klsyn
 }
 
-install_opensesame_source(){
-# TODO: a lot
-    sudo -u ubuntu conda install pyqt
-    sudo -u ubuntu pip install pygame
-    git clone git://github.com/smathot/OpenSesame.git
+install_opensesame(){
+    # Install 3.1 from CogSci channel. The .deb includes Python 2.7, and
+    # installing via conda means OpenSesame will use Python 3.
+    sudo -u ubuntu conda install -c cogsci python-opensesame
 }
 
 install_audiolabel(){
@@ -384,7 +375,7 @@ install_ucblingmisc(){
     cd /usr/local/bin && \
     wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
     chmod +x $FNAME2 && \
-    cd /opt/p2fa && \  # TODO: check that align.py is correct
+    cd /opt/p2fa && \
     wget --quiet --output-document="$FNAME3" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME3 && \
     chmod +x $FNAME3 && \
     echo DONE: $msg || echo FAIL: $msg
@@ -709,9 +700,9 @@ bpm-public)
     apt_get_update
     make_src_dir
     install_bce_packages
+    install_opensesame
     install_media_player_gst
     install_klsyn
-    #install_opensesame_source
     install_audiolabel
     install_ultratils
     #install_paramdraw  # leave out of bpm-public? probably
@@ -767,8 +758,8 @@ klsyn)
     install_klsyn
     ;;
 
-opensesame-source)
-    install_opensesame_source
+opensesame)
+    install_opensesame
     ;;
 
 audiolabel)
