@@ -51,8 +51,9 @@ define(){ read -r -d '' ${1} || true; }
 wait_for_unattended-upgrade(){
     while true; do
         echo "Checking for unattended-upgrade... "
-        running=`pgrep unattended-upgrade | wc -l`
-        if [ "$running" = "0" ]; then
+        # pgrep returns non-zero if process not found
+        pgrep -f unattended-upgrade > /dev/null
+        if [ $? -ne 0 ]; then
             echo "unattended-upgrade is not running. Continuing."
             break
         else
