@@ -45,6 +45,23 @@ ORIGDIR=`pwd`
 # Make heredoc variable assignment pretty.
 define(){ read -r -d '' ${1} || true; }
 
+# The unattended-upgrade script might be running, which locks the apt
+# database and prevents installs. This function checks for a running
+# script and waits until it terminates.
+wait_for_unattended-upgrade(){
+    while true; do
+        echo "Checking for unattended-upgrade... "
+        running=`pgrep unattended-upgrade | wc -l`
+        if [ "$running" = "0" ]; then
+            echo "unattended-upgrade is not running. Continuing."
+            break
+        else
+            echo "unattended-upgrade is running. Will wait.n"
+            sleep 5s
+        fi
+    done
+}
+
 # Install/remove .deb packages with apt-get.
 # First argument is install|remove
 # Second argument is a newline-delimited list of packages (# comment lines allowed).
@@ -53,13 +70,16 @@ apt_get_packages(){
     echo "${3}"
     # The grep bit allows us to have comments in the packages file
     # The quotation marks around ${1} preserves newlines.
+    wait_for_unattended-upgrade
     $APT_GET ${1} $(grep '^[^#]' <(echo "${2}")) && \
+    wait_for_unattended-upgrade
     $APT_GET clean && \ # help avoid running out of disk space
     echo DONE: ${3} || echo FAIL: ${3}
 }
 
 # Package installs will fail if we are not up to date.
 apt_get_update(){
+    wait_for_unattended-upgrade
     $APT_GET update
 }
 
@@ -662,6 +682,7 @@ bpm-public)
     install_esps
     install_r_packages
     install_ifcformant
+    wait_for_unattended-upgrade
     apt-get -q -y autoremove
     ;;
 
