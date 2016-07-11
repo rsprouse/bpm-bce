@@ -382,7 +382,6 @@ install_ucblingmisc(){
     cd $ORIGDIR
 }
 
-# TODO: check this
 install_ultratils(){
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE ultratils
@@ -478,7 +477,6 @@ EOF
     fi
 }
 
-# TODO: check this
 # R packages for linguists.
 install_r_packages(){
 define r_cmd <<'EOF'
@@ -491,14 +489,12 @@ EOF
 echo $r_cmd | sudo /usr/bin/Rscript --no-restore --no-save -
 }
 
-# TODO: check this
 # wine depends on ttt-mscorefont-installer and requires user to accept a license agreement
 install_wine(){
     # Needed for EdgeTrak
     apt_get_packages install wine "BPM-BCE: Installing wine from standard repositories..."
 }
 
-# TODO: check this
 install_edgetrak(){
     # Install EdgeTrak.
     # EdgeTrak will run with:
@@ -506,47 +502,11 @@ install_edgetrak(){
     # Note: user must configure wine to enable 'Emulate a virtual desktop'.
     msg="Install EdgeTrak."
     echo $msg
-    #FNAME=EdgeTrak.zip
     FNAME=Edgetrak.zip
     cd /opt
     #wget --quiet --output-document="$FNAME" http://speech.umaryland.edu/programs/$FNAME && \
     wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/edgetrak/$FNAME && \
     unzip $FNAME && \
-    rm $FNAME && \
-    echo DONE: $msg || echo FAIL: $msg
-    cd $ORIGDIR
-}
-
-# TODO: check this
-install_mcr(){
-    # Install Matlab MCR.
-    msg="Installing Matlab runtime."
-    echo $msg
-    echo "This is a large download and might take a while..."
-    FNAME=MCR_R2014b_glnxa64_installer.zip
-    cd /usr/local/src && \
-    mkdir -p matlab_installer && \
-    cd matlab_installer && \
-    wget --output-document="$FNAME" http://www.mathworks.com/supportfiles/downloads/R2014b/deployment_files/R2014b/installers/glnxa64/$FNAME && \
-    unzip $FNAME && \
-    #./install -mode silent -agreeToLicense yes -destinationFolder /opt/matlab/2014b && \
-    ./install -destinationFolder /opt/matlab/2014b && \
-    rm $FNAME && \
-    echo DONE: $msg || echo FAIL: $msg
-    cd $ORIGDIR
-}
-
-# TODO: check this
-install_display_acq(){
-    # Install display_acq.
-    msg="Installing display_acq."
-    echo $msg
-    FNAME=display_acq_2014b.tar
-    cd /usr/local/bin && \
-    wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/display_acq-bpm/$FNAME && \
-    tar xf $FNAME && \
-    chmod +rx run_display_acq.sh && \
-    chmod +rx display_acq && \
     rm $FNAME && \
     echo DONE: $msg || echo FAIL: $msg
     cd $ORIGDIR
@@ -598,10 +558,6 @@ Targets not installed in the BPM public release:
     (user must register at http://htk.eng.cam.ac.uk/register.shtml
     in order to download the package)
 
-  mcr
-    Matlab Component Runtime (2014b), required for display_acq
-    (user must accept license agreement)
-
   phylogenetics
     MrBayes, BEAST, Mesquite
 
@@ -620,11 +576,6 @@ or update:
   bce-packages
     Packages that are available in the BCE package repository but not already
     installed in BCE (imagemagick, praat, sox, wavesurfer).
-
-  display_acq
-    Matlab tool for multichannel signal display, as produced in UC Berkeley
-    Phonology Lab.
-    (requires Matlab Component Runtime, which user can install with mcr target)
 
   edgetrak
     EdgeTrak tool for working with ultrasound images
@@ -718,7 +669,6 @@ bpm-public)
 bpm-ucbling)
     install_htk
     install_wine
-    install_mcr
     ;;
 
 # Self-update bpm-update.
@@ -804,14 +754,6 @@ wine)
 
 edgetrak)
     install_edgetrak
-    ;;
-
-mcr)
-    install_mcr
-    ;;
-
-display_acq)
-    install_display_acq
     ;;
 
 creak_detect)
