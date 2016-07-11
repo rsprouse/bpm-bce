@@ -331,8 +331,8 @@ EOF
 
 install_klsyn(){
     # Required by klsyn
-    /home/ubuntu/miniconda3/bin/pip install xlrd
-    /home/ubuntu/miniconda3/bin/pip install xlwt
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlrd
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlwt
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE klsyn
 }
