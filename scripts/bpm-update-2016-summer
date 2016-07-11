@@ -8,7 +8,7 @@
 #    cd /usr/local/bin
 #    sudo wget https://raw.githubusercontent.com/rsprouse/bpm-bce/master/scripts/bpm-update-2016-summer
 #    sudo chmod +x bpm-update-2016-summer
-#    sudo bpm-update-2016-summer bpm-public
+#    sudo bpm-update-2016-summer bpm-public 2>&1 | tee -a /home/ubuntu/bpm-install.log
 #
 # This creates a VM that can be exported and shared without restriction. Additional
 # license-restricted packages can be installed for internal sharing with:
@@ -57,7 +57,7 @@ wait_for_unattended-upgrade(){
             echo "unattended-upgrade is not running. Continuing."
             break
         else
-            echo "unattended-upgrade is running. Will wait.n"
+            echo "unattended-upgrade is running. Will wait."
             sleep 5s
         fi
     done
