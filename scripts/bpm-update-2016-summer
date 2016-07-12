@@ -99,8 +99,12 @@ install_version() {
 # Create a symlink from bpm-update-VERSION to bpm-update.
 symlink_bpm-update() {
     echo "Creating symlink to $ABS_BARE_SCRIPTNAME from $ABS_VERSIONED_SCRIPTNAME."
-    ln -s $ABS_VERSIONED_SCRIPTNAME $ABS_BARE_SCRIPTNAME && \
-    echo "DONE: Created symlink." || { echo "FAIL: Could not create symlink. Is $VERSIONED_SCRIPTNAME in $SCRIPTDIR? Or are you trying to run "; exit 1; }
+    if [ -e $ABS_BARE_SCRIPTNAME ]; then
+        echo "DONE: symlink not created because it already exists."
+    else
+        ln -s $ABS_VERSIONED_SCRIPTNAME $ABS_BARE_SCRIPTNAME && \
+        echo "DONE: Created symlink." || { echo "FAIL: Could not create symlink. Is $VERSIONED_SCRIPTNAME in $SCRIPTDIR? Or are you trying to run "; exit 1; }
+    fi
 }
 
 # Self-update the bpm-update script.
