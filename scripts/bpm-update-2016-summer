@@ -159,6 +159,7 @@ python_clone_and_setup(){
     sudo -u ubuntu git clone ${1}/${2}
     cd ${2}
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/python setup.py install
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/envs/py27/bin/python setup.py install
     cd ..
 #    rm -rf ${2}
     cd $ORIGDIR
