@@ -86,7 +86,11 @@ apt_get_update(){
 
 # Add BPM_VERSION environment variable.
 install_version() {
-    echo "Installed BPM_VERSION environment variable will be $VERSION. Press 'y' to confirm."
+    echo "Installed BPM_VERSION environment variable will be"
+    echo ""
+    echo $VERSION
+    echo ""
+    echo "Press 'y' to confirm."
     read -n 1 confirm
     if [ "$confirm" != 'y' ]; then
         echo "Edit bpm-update to update VERSION. Exiting."
