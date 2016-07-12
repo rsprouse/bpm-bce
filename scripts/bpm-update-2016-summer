@@ -84,19 +84,16 @@ apt_get_update(){
     $APT_GET update
 }
 
-# Install the version.txt file on the desktop.
-install_version_txt() {
-    echo "Installing version.txt to the desktop."
-    echo "Installed version will be $VERSION. Press 'y' to confirm."
+# Add BPM_VERSION environment variable.
+install_version() {
+    echo "Installed BPM_VERSION environment variable will be $VERSION. Press 'y' to confirm."
     read -n 1 confirm
     if [ "$confirm" != 'y' ]; then
         echo "Edit bpm-update to update VERSION. Exiting."
         exit 1
     fi
-    cat > /home/ubuntu/Desktop/version.txt << EOF
-$VERSION
-EOF
-    echo "Installed version.txt."
+    echo "BPM_VERSION=$VERSION" >> /etc/environment
+    echo "Installed BPM_VERSION environment variable with value $VERSION."
 }
 
 # Create a symlink from bpm-update-VERSION to bpm-update.
@@ -667,7 +664,7 @@ case "$1" in
 # Base package installation for public release. 
 bpm-public)
     symlink_bpm-update
-    install_version_txt
+    install_version
     add_bpm_repositories
     apt_get_update
     make_src_dir
