@@ -68,12 +68,11 @@ wait_for_unattended-upgrade(){
 # Second argument is a newline-delimited list of packages (# comment lines allowed).
 # Third argument is message to echo to console.
 apt_get_packages(){
+    wait_for_unattended-upgrade
     echo "${3}"
     # The grep bit allows us to have comments in the packages file
     # The quotation marks around ${1} preserves newlines.
-    wait_for_unattended-upgrade && \
     $APT_GET ${1} $(grep '^[^#]' <(echo "${2}")) && \
-    wait_for_unattended-upgrade && \
     $APT_GET clean && \ # help avoid running out of disk space
     echo DONE: ${3} || echo FAIL: ${3}
 }
@@ -834,4 +833,3 @@ apt-get)
     ;;
 
 esac
-
