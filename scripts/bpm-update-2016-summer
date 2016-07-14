@@ -346,6 +346,10 @@ install_opensesame(){
     # Install 3.1 from CogSci channel. The .deb includes Python 2.7, and
     # installing via conda means OpenSesame will use Python 3.
     sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes --channel cogsci python-opensesame
+    FNAME=OpenSesame.desktop
+    # Add OpenSesame launcher to the Applications menu
+    wget --quiet --output-document="/home/ubuntu/.local/share/applications/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME && \
+    chmod 0644 /home/ubuntu/.local/share/applications/OpenSesame.desktop
 }
 
 install_audiolabel(){
