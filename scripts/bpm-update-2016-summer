@@ -342,6 +342,10 @@ install_klsyn(){
     python_clone_and_setup $GITBASE klsyn
 }
 
+install_bokeh(){
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes bokeh
+}
+
 install_opensesame(){
     # Install 3.1 from CogSci channel. The .deb includes Python 2.7, and
     # installing via conda means OpenSesame will use Python 3.
@@ -683,6 +687,7 @@ bpm-public)
     install_bce_packages
     install_opensesame
     install_media_player_gst
+    install_bokeh
     install_klsyn
     install_audiolabel
     install_ultratils
@@ -737,6 +742,10 @@ media-player-gst)
 
 klsyn)
     install_klsyn
+    ;;
+
+bokeh)
+    install_bokeh
     ;;
 
 opensesame)
