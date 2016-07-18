@@ -150,7 +150,8 @@ EOF
     exec /bin/bash overwrite_bpm-update.sh "$ORIGDIR"
 }
 
-make_src_dir(){
+create_user_dirs(){
+    sudo -u ubuntu mkdir ~/bin
     sudo -u ubuntu mkdir ~/src
 }
 
@@ -683,7 +684,7 @@ bpm-public)
     install_version
     add_bpm_repositories
     apt_get_update
-    make_src_dir
+    create_user_dirs
     install_bce_packages
     install_opensesame
     install_media_player_gst
