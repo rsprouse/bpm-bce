@@ -315,7 +315,6 @@ install_splalign(){
     cd $ORIGDIR
 }
 
-# TODO: check this
 install_phylogenetics(){
 define PHYLOPKGS <<'EOF'
 mrbayes
@@ -324,9 +323,9 @@ EOF
     apt_get_packages install "$PHYLOPKGS" "BPM-BCE: Installing Linguistics packages for phylogenetics..."
     msg="Installing Mesquite"
     echo $msg
-    FNAME=Mesquite301_Linux.tgz
+    FNAME=Mesquite310-Linux.tgz
     cd /opt && \
-    wget --quiet --output-document="$FNAME" https://github.com/MesquiteProject/MesquiteCore/releases/download/3.01/$FNAME && \
+    wget --quiet --output-document="$FNAME" https://github.com/MesquiteProject/MesquiteCore/releases/download/v3.10-build-765/$FNAME && \
     tar xf $FNAME && \
     chmod +x /opt/Mesquite_Folder/mesquite.sh && \
     chown -R ubuntu.ubuntu /opt/Mesquite_Folder/ && \
