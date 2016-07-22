@@ -271,7 +271,6 @@ install_media_player_gst(){
     cd $ORIGDIR
 }
 
-# TODO: check this
 install_fieldworks(){
     # Packages from the sil.org repository.
 define SILPKGS <<'EOF'
