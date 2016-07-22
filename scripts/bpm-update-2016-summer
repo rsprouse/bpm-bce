@@ -279,6 +279,25 @@ EOF
     apt_get_packages install "$SILPKGS" "BPM-BCE: Installing Linguistics packages from sil.org repository..."
 }
 
+install_elan(){
+    # Install ELAN linguistic annotator from MPI.
+    #
+define ELANPKGS <<'EOF'
+vlc
+EOF
+    apt_get_packages install "$ELANPKGS" "BPM-BCE: Installing packages for ELAN..."
+    FNAME1=Simple-ELAN_1-1_linux.bin
+    FNAME2=ELAN.desktop
+    cd /usr/local/src && \
+    wget --quiet --output-document="$FNAME1" http://www.mpi.nl/tools/elan/simple/$FNAME1 && \
+    chmod +x $FNAME1 && \
+    sudo -u ubuntu -H ./$FNAME1 && \
+    wget --quiet --output-document="/home/ubuntu/.local/share/applications/$FNAME2" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME2 && \
+    chmod 0644 /home/ubuntu/.local/share/applications/$FNAME2 && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
 install_ipa(){
     # Packages from the sil.org repository.
 define SILPKGS <<'EOF'
@@ -301,7 +320,6 @@ EOF
     cd $ORIGDIR
 }
 
-# TODO: check this
 install_splalign(){
     # Install splalign.py
     msg="Installing splalign.py. We do not have permission to distribute this software. We will attempt to install from a local .zip file."
@@ -598,6 +616,9 @@ Targets not installed in the BPM public release:
     Windows emulator, required for EdgeTrak
     (user must accept license agreement)
 
+  elan
+    ELAN linguistic annotation tool from MPI.
+
 Targets that are installed in the BPM public release. Use these to reinstall
 or update:
 
@@ -806,6 +827,11 @@ phylogenetics)
 fieldworks)
     apt_get_update
     install_fieldworks
+    ;;
+
+elan)
+    apt_get_update
+    install_elan
     ;;
 
 ipa)

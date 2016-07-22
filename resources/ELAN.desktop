@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=ELAN
+Comment=
+Exec=/home/ubuntu/Simple-ELAN_1.1/Simple-ELAN_1.1
+Icon=
+Path=/home/ubuntu
+Terminal=false
+StartupNotify=false
+Categories=Education
