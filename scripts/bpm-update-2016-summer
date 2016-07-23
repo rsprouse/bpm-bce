@@ -292,6 +292,7 @@ EOF
     wget --quiet --output-document="$FNAME1" http://www.mpi.nl/tools/elan/simple/$FNAME1 && \
     chmod +x $FNAME1 && \
     sudo -u ubuntu -H ./$FNAME1 && \
+    rm $FNAME1 && \
     wget --quiet --output-document="/home/ubuntu/.local/share/applications/$FNAME2" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME2 && \
     chmod 0644 /home/ubuntu/.local/share/applications/$FNAME2 && \
     echo DONE: $msg || echo FAIL: $msg
