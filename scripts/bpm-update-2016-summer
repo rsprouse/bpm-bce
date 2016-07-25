@@ -352,12 +352,43 @@ EOF
     cd $ORIGDIR
 }
 
+install_py_packages(){
+    # Additional Python packages.
+define PAPKGS <<'EOF'
+portaudio19-dev
+libportaudio2
+EOF
+    apt_get_packages install "$PAPKGS" "BPM-BCE: Installing portaudio..." && \
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install pyaudio && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
 install_klsyn(){
     # Required by klsyn
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlrd
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlwt
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE klsyn
+}
+
+install_phon(){
+    msg="Installing Phon"
+    echo $msg
+    FNAME=Phon_unix_2_1_8.tar.gz
+    RELEASE=2.1.8
+    PHONDIR="/opt/Phon 2.1"
+    LAUNCHER=Phon.desktop
+    cd /opt && \
+    wget --quiet --output-document="$FNAME" https://github.com/phon-ca/phon/releases/download/$RELEASE/$FNAME && \
+    tar xzf $FNAME && \
+    rm $FNAME && \
+    chown -R ubuntu.ubuntu $PHONDIR/ && \
+    wget --quiet --output-document="/home/ubuntu/.local/share/applications/$LAUNCHER" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$LAUNCHER && \
+    perl -pi -e 's/<phondir>/$PHONDIR/' "/home/ubuntu/.local/share/applications/$LAUNCHER" && \
+    chmod 0644 /home/ubuntu/.local/share/applications/$LAUNCHER && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
 }
 
 install_bokeh(){
@@ -658,6 +689,9 @@ or update:
   r-packages
     A useful set of R packages for linguists.
   
+  py-packages
+    A useful set of Python packages.
+
   fix-sil
     Fix sil repo found in VERSION=BCE-2015-spring-BPM-2-public.
 
@@ -678,6 +712,10 @@ or update:
 
   ucblingmisc
     Various scripts used in the UC Berkeley Phonology Lab.
+
+  phon
+    The Phon software package for phonological data analysis. See
+    https://www.phon.ca/phontrac.
 
 Special purpose targets:
 
@@ -706,6 +744,7 @@ bpm-public)
     apt_get_update
     create_user_dirs
     install_bce_packages
+    install_ipa
     install_opensesame
     install_media_player_gst
     install_bokeh
@@ -716,6 +755,7 @@ bpm-public)
     install_maedasyn
     install_ucblingmisc
     install_esps
+    install_py_packages
     install_r_packages
     install_ifcformant
     wait_for_unattended-upgrade
@@ -803,6 +843,14 @@ htk)
 
 splalign)
     install_splalign
+    ;;
+
+phon)
+    install_phon
+    ;;
+
+py-packages)
+    install_py_packages
     ;;
 
 r-packages)
