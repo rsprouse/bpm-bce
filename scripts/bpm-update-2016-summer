@@ -695,9 +695,6 @@ or update:
   py-packages
     A useful set of Python packages.
 
-  fix-sil
-    Fix sil repo found in VERSION=BCE-2015-spring-BPM-2-public.
-
   ultratils
     Install python code for processing Ultrasonix ultrasound data.
 
@@ -781,10 +778,6 @@ bce-packages)
     ;;
 
 # Individual package install/update.
-fix-sil)
-    fix_sil
-    ;;
-
 fix-audio-rate)
     fix_audio_rate
     ;;
