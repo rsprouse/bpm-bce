@@ -377,15 +377,16 @@ install_phon(){
     echo $msg
     FNAME=Phon_unix_2_1_8.tar.gz
     RELEASE=2.1.8
-    PHONDIR="/opt/Phon 2.1"
+    PHONDIR="Phon 2.1"
     LAUNCHER=Phon.desktop
+    LCMD="perl -pi -e 's/<phondir>/$PHONDIR/' '/home/ubuntu/.local/share/applications/$LAUNCHER'"
     cd /opt && \
     wget --quiet --output-document="$FNAME" https://github.com/phon-ca/phon/releases/download/$RELEASE/$FNAME && \
     tar xzf $FNAME && \
     rm $FNAME && \
-    chown -R ubuntu.ubuntu "$PHONDIR/" && \
+    chown -R ubuntu.ubuntu "/opt/$PHONDIR/" && \
     wget --quiet --output-document="/home/ubuntu/.local/share/applications/$LAUNCHER" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$LAUNCHER && \
-    perl -pi -e 's/<phondir>/$ENV{PHONDIR}/' "/home/ubuntu/.local/share/applications/$LAUNCHER" && \
+    eval $LCMD && \
     chmod 0644 /home/ubuntu/.local/share/applications/$LAUNCHER && \
     echo DONE: $msg || echo FAIL: $msg
     cd $ORIGDIR
