@@ -780,12 +780,6 @@ bce-packages)
     install_bce_packages
     ;;
 
-# Get new sources.list for unmaintained utopic distribution.
-sources-list)
-    update_sources_list
-    apt_get_update
-    ;;
-
 # Individual package install/update.
 fix-sil)
     fix_sil
