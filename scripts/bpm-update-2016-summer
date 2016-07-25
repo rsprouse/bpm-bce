@@ -115,7 +115,7 @@ symlink_bpm-update() {
 update_bpm-update() {
     echo "Updating bpm_update"
 
-    UPDATE_BASE=https://raw.githubusercontent.com/rsprouse/bpm-bce/master
+    UPDATE_BASE=https://raw.githubusercontent.com/rsprouse/bpm-bce/master/scripts
 
     # Download new version
     if ! wget --quiet --output-document="$ABS_VERSIONED_SCRIPTNAME".tmp $UPDATE_BASE/$VERSIONED_SCRIPTNAME ; then
