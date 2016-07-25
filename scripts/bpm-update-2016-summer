@@ -717,7 +717,7 @@ or update:
     Various scripts used in the UC Berkeley Phonology Lab.
 
   phon
-    The Phon software package for phonological data analysis. See
+    The Phon database system for doing phonetics and phonology. See
     https://www.phon.ca/phontrac.
 
 Special purpose targets:
