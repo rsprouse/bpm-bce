@@ -302,8 +302,10 @@ EOF
 install_ipa(){
     # Packages from the sil.org repository.
 define SILPKGS <<'EOF'
-fonts-sil-charissil
-fonts-sil-doulossil
+fonts-sil-charis
+fonts-sil-charis-compact
+fonts-sil-doulos
+fonts-sil-doulos-compact
 ibus-kmfl
 ibus-table
 ibus-table-ipa-x-sampa
