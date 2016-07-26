@@ -370,6 +370,7 @@ libportaudio2
 EOF
     apt_get_packages install "$PAPKGS" "BPM-BCE: Installing portaudio..." && \
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install pyaudio && \
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install pygame && \
     echo DONE: $msg || echo FAIL: $msg
     cd $ORIGDIR
 }
