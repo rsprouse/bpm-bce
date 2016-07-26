@@ -155,6 +155,14 @@ create_user_dirs(){
     sudo -u ubuntu mkdir ~/src
 }
 
+fix_gedit(){
+    # There is a virtualbox/gedit bug that makes saving to shared folders
+    # difficult. See, e.g., https://www.virtualbox.org/ticket/9203.
+    # With this setting applied every other save should succeed. See David's
+    # answer at http://unix.stackexchange.com/questions/52951/gedit-wont-save-a-file-on-a-virtualbox-share-text-file-busy.
+    gsettings set org.gnome.gedit.preferences.editor create-backup-copy true
+}
+
 # Clone and set up python package from github.
 # First argument is base github url.
 # Second argument is specific repo (package) on github.
@@ -372,6 +380,19 @@ install_klsyn(){
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlwt
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE klsyn
+}
+
+# Experimental install of autovot.
+install_autovot(){
+    GITBASE=https://github.com/rsprouse
+    cd /home/ubuntu/src
+    sudo -u ubuntu git clone $GITBASE/autovot
+    cd autovot/python
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/envs/py27/bin/python setup.py install
+    ln -s /home/ubuntu/src/autovot/autovot/bin/Vot* /home/ubuntu/bin
+#    cd ../..
+#    rm -rf autovot
+    cd $ORIGDIR
 }
 
 install_phon(){
@@ -717,6 +738,9 @@ or update:
     The Phon database system for doing phonetics and phonology. See
     https://www.phon.ca/phontrac.
 
+  autovot
+    Autovot is a software package for automatic measurement of voice onset time.
+
 Special purpose targets:
 
   bpm-update
@@ -758,6 +782,7 @@ bpm-public)
     install_py_packages
     install_r_packages
     install_ifcformant
+    fix_gedit
     wait_for_unattended-upgrade
     apt-get -q -y autoremove
     ;;
@@ -833,6 +858,10 @@ htk)
 
 splalign)
     install_splalign
+    ;;
+
+autovot)
+    install_autovot
     ;;
 
 phon)
