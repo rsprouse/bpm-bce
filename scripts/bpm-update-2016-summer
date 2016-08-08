@@ -389,9 +389,9 @@ install_klsyn(){
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlwt
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE klsyn
-    FNAME=wxklsyn
-    wget --quiet --output-document="/usr/local/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
-    chmod +x /usr/local/bin/$FNAME
+    FNAME=wxklsyn.pyw
+    sudo -u ubuntu wget --quiet --output-document="/home/ubuntu/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
+    chmod +x /home/ubuntu/bin/$FNAME
 }
 
 # Experimental install of autovot.
@@ -471,9 +471,9 @@ install_maedasyn(){
     /home/ubuntu/miniconda3/bin/pip install pyaudio
     source deactivate
 EOF
-    FNAME=wxmaedasyn
-    wget --quiet --output-document="/usr/local/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
-    chmod +x /usr/local/bin/$FNAME
+    FNAME=maedasyn_wx
+    sudo -u ubuntu wget --quiet --output-document="/home/ubuntu/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
+    chmod +x /home/ubuntu/bin/$FNAME
 }
 
 install_ucblingmisc(){
