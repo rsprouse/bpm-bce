@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Run maedasyn_wx in the Python 2.7 environment.
+    bash << EOF
+    source /home/ubuntu/miniconda3/bin/activate py27
+    maedasyn_wx
+    source deactivate
+EOF
+

@@ -458,6 +458,15 @@ install_paramdraw(){
 install_maedasyn(){
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE maedasyn
+    # Fix ups for making maedasyn_wx available in py27 env as wxmaedasyn.
+    sudo -u ubuntu -H bash << EOF
+    source /home/ubuntu/miniconda3/bin/activate py27
+    /home/ubuntu/miniconda3/bin/pip install pyaudio
+    source deactivate
+EOF
+    FNAME=wxmaedasyn
+    wget --quiet --output-document="/usr/local/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
+    chmod +x /usr/local/bin/$FNAME
 }
 
 install_ucblingmisc(){
