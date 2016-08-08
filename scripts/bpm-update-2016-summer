@@ -389,7 +389,7 @@ install_klsyn(){
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlwt
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE klsyn
-    FNAME=wxklsyn.pyw
+    FNAME=wxklsyn
     sudo -u ubuntu wget --quiet --output-document="/home/ubuntu/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
     chmod +x /home/ubuntu/bin/$FNAME
 }
@@ -471,7 +471,7 @@ install_maedasyn(){
     /home/ubuntu/miniconda3/bin/pip install pyaudio
     source deactivate
 EOF
-    FNAME=maedasyn_wx
+    FNAME=wxmaedasyn
     sudo -u ubuntu wget --quiet --output-document="/home/ubuntu/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
     chmod +x /home/ubuntu/bin/$FNAME
 }
