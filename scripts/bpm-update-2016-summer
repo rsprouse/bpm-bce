@@ -323,12 +323,18 @@ EOF
     msg="Adding IPA input method."
     echo $msg
     SCHEMADIR=/usr/share/glib-2.0/schemas
-    FNAME=30_org.freedesktop.ibus.general.gschema.override
+    FNAME1=30_org.freedesktop.ibus.general.gschema.override
+    FNAME2=Ibus_daemon.desktop
     cd $SCHEMADIR && \
-    wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/bpm-bce/resources/$FNAME && \
+    wget --quiet --output-document="$FNAME1" https://github.com/rsprouse/ucblingmisc/raw/master/bpm-bce/resources/$FNAME1 && \
     glib-compile-schemas $SCHEMADIR && \
+    wget --quiet --output-document="/home/ubuntu/.config/autostart/$FNAME2" https://github.com/rsprouse/ucblingmisc/raw/master/bpm-bce/resources/$FNAME2 && \
+    perl -pi -e 's#exec python3#exec /usr/bin/python3#' /usr/bin/ibus-setup && \
     echo DONE: $msg || echo FAIL: $msg
     cd $ORIGDIR
+    # Perl patch makes explicit call to system Python rather than
+    # anaconda in ibus-setup.
+    # Anaconda install might not have correct libraries installed.
 }
 
 install_splalign(){
