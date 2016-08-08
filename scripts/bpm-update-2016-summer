@@ -153,6 +153,7 @@ EOF
 create_user_dirs(){
     sudo -u ubuntu mkdir ~/bin
     sudo -u ubuntu mkdir ~/src
+    sudo -u ubuntu mkdir ~/.config/autostart
 }
 
 fix_gedit(){
