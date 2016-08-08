@@ -377,10 +377,14 @@ EOF
 
 install_klsyn(){
     # Required by klsyn
+    install_wxpython
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlrd
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install xlwt
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE klsyn
+    FNAME=wxklsyn
+    wget --quiet --output-document="/usr/local/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
+    chmod +x /usr/local/bin/$FNAME
 }
 
 # Experimental install of autovot.
@@ -418,6 +422,17 @@ install_phon(){
 
 install_bokeh(){
     sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes bokeh
+}
+
+install_wxpython(){
+    # Required by wxklsyn.pyw (only for Python 2.7)
+    # conda did not work correctly in py27 env and running directly
+    # with sudo, so we encapsulate with its own bash environment.
+    sudo -u ubuntu -H bash << EOF
+    source /home/ubuntu/miniconda3/bin/activate py27
+    conda install --yes wxpython
+    source deactivate
+EOF
 }
 
 install_opensesame(){
