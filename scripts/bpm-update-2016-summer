@@ -350,7 +350,7 @@ EOF
     msg="Adding autostart of IBus daemon."
     echo $msg
     FNAME2=Ibus_daemon.desktop
-    wget --quiet --output-document="/home/ubuntu/.config/autostart/$FNAME2" https://github.com/rsprouse/ucblingmisc/raw/master/bpm-bce/resources/$FNAME2 && \
+    wget --quiet --output-document="/home/ubuntu/.config/autostart/$FNAME2" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME2 && \
     echo DONE: $msg || echo FAIL: $msg
     cd $ORIGDIR
 }
