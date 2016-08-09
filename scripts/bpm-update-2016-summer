@@ -161,7 +161,16 @@ fix_gedit(){
     # difficult. See, e.g., https://www.virtualbox.org/ticket/9203.
     # With this setting applied every other save should succeed. See David's
     # answer at http://unix.stackexchange.com/questions/52951/gedit-wont-save-a-file-on-a-virtualbox-share-text-file-busy.
-    gsettings set org.gnome.gedit.preferences.editor create-backup-copy true
+    msg="Editing gedit preferences."
+    echo $msg
+    sudo -u ubuntu -H gsettings set org.gnome.gedit.preferences.editor create-backup-copy true
+    state=`sudo -u ubuntu -H gsettings get org.gnome.gedit.preferences.editor create-backup-copy`
+    if [ "$state" == "true" ]
+    then
+        echo "DONE: gedit preferences confirmed."
+    else
+        echo "FAIL: failed to set gedit preferences."
+    fi
 }
 
 # Clone and set up python package from github.
