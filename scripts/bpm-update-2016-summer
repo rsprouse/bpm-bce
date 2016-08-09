@@ -161,16 +161,15 @@ fix_gedit(){
     # difficult. See, e.g., https://www.virtualbox.org/ticket/9203.
     # With this setting applied every other save should succeed. See David's
     # answer at http://unix.stackexchange.com/questions/52951/gedit-wont-save-a-file-on-a-virtualbox-share-text-file-busy.
-    msg="Editing gedit preferences."
+    dest=/home/ubuntu/.bashrc
+    msg="Inserting gedit preferences into .bashrc."
     echo $msg
-    sudo -u ubuntu -H gsettings set org.gnome.gedit.preferences.editor create-backup-copy true
-    state=`sudo -u ubuntu -H gsettings get org.gnome.gedit.preferences.editor create-backup-copy`
-    if [ "$state" == "true" ]
-    then
-        echo "DONE: gedit preferences confirmed."
-    else
-        echo "FAIL: failed to set gedit preferences."
-    fi
+    echo "" >> $dest && \
+    echo "# BPM-BCE: Added by bootstrap" >> $dest && \
+    echo "# Workaround for gedit save bug." >> $dest && \
+    echo "# See http://unix.stackexchange.com/questions/52951/gedit-wont-save-a-file-on-a-virtualbox-share-text-file-busy." >> $dest && \
+    echo "gsettings set org.gnome.gedit.preferences.editor create-backup-copy true" >> $dest && \
+    echo DONE: $msg || echo FAIL: $msg
 }
 
 # Clone and set up python package from github.
