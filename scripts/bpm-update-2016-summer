@@ -484,7 +484,7 @@ install_maedasyn(){
     python_clone_and_setup $GITBASE maedasyn
     # Fix ups for making maedasyn_wx available in py27 env as wxmaedasyn.
     sudo -u ubuntu -H bash << EOF
-    source /home/ubuntu/miniconda3/bin/activate py27
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
     /home/ubuntu/miniconda3/bin/pip install pyaudio
     source deactivate
 EOF
