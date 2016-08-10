@@ -480,15 +480,21 @@ install_paramdraw(){
 }
 
 install_maedasyn(){
-    GITBASE=https://github.com/rsprouse
-    python_clone_and_setup $GITBASE maedasyn
     # Fix ups for making maedasyn_wx available in py27 env as wxmaedasyn.
     sudo -u ubuntu -H bash << EOF
     source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
     conda install --yes portaudio
     /home/ubuntu/miniconda3/envs/py27/bin/pip install pyaudio
+    cd /home/ubuntu/src
+    git clone https://github.com/rsprouse/maedasyn
+    cd maedasyn
+    python setup.py install
     source deactivate
+    cd ..
+#    rm -rf maedasyn
 EOF
+    cd $ORIGDIR
+    # Copy the script that launches maedasyn_wx in the right Python env.
     FNAME=wxmaedasyn
     sudo -u ubuntu wget --quiet --output-document="/home/ubuntu/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
     chmod +x /home/ubuntu/bin/$FNAME
