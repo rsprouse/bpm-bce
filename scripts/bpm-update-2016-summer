@@ -825,7 +825,7 @@ bpm-public)
     install_klsyn
     install_audiolabel
     install_ultratils
-    #install_paramdraw  # leave out of bpm-public? probably
+    install_paramdraw  # required by maedasyn
     install_maedasyn
     install_ucblingmisc
     install_esps
