@@ -31,7 +31,7 @@
 # from template:
 # VBoxManage setextradata <VM_NAME> VBoxInternal2/SharedFoldersEnableSymlinksCreate/<SHARE_NAME> 1
 
-VERSION=BCE-${BCE_VERSION}-BPM-1-preview
+VERSION=BCE-${BCE_VERSION}-BPM-2-preview
 VERSION_SUFFIX=`echo $VERSION | cut -f 2,3 -d-`   # e.g. 2015-spring
 SCRIPTDIR=/usr/local/bin
 BARE_SCRIPTNAME=bpm-update
