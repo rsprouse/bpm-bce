@@ -487,6 +487,8 @@ install_maedasyn(){
     sudo -u ubuntu -H bash << EOF
     source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
     conda install --yes portaudio
+    source deactivate
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
     /home/ubuntu/miniconda3/envs/py27/bin/pip install pyaudio
     source deactivate
     cd /home/ubuntu/src
