@@ -252,6 +252,9 @@ tk8.5
 # pulseaudio is removed.
 osspd-alsa
 
+# SciTE is an alternative to gedit, which has problems writing to shared folders.
+scite
+
 # The following packages are needed in order to build espsfree-* on the vm.
 # They will no longer be necessary and can be removed when espsfree-*
 # can be downloaded as a binary package.
