@@ -182,7 +182,7 @@ python_clone_and_setup(){
     sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/python setup.py install
     sudo -u ubuntu -H /home/ubuntu/miniconda3/envs/py27/bin/python setup.py install
     cd ..
-#    rm -rf ${2}
+    rm -rf ${2}
     cd $ORIGDIR
 }
 
@@ -502,7 +502,7 @@ EOF
     python setup.py install
     source deactivate
     cd ..
-#    rm -rf maedasyn
+    rm -rf maedasyn
 EOF
     cd $ORIGDIR
     # Copy the script that launches maedasyn_wx in the right Python env.
