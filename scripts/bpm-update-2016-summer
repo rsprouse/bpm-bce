@@ -488,7 +488,9 @@ install_maedasyn(){
     source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
     conda install --yes portaudio
     /home/ubuntu/miniconda3/envs/py27/bin/pip install pyaudio
+    source deactivate
     cd /home/ubuntu/src
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
     git clone https://github.com/rsprouse/maedasyn
     cd maedasyn
     python setup.py install
