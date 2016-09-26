@@ -600,7 +600,7 @@ install_ifcformant(){
     cd /usr/local/src && \
     wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/ifcformant-bpm/$FNAME && \
     tar xf $FNAME && \
-    cd ifcformant-bpm-bce && \
+    cd ifcformant-bpm-bce-py3.5 && \
     ./install-bpm.sh && \
     cd .. && \
     rm $FNAME && \
