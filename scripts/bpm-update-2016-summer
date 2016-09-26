@@ -596,7 +596,7 @@ install_ifcformant(){
     # Install ifcformant.
     msg="Install ifcformant."
     echo $msg
-    FNAME=ifcformant-bpm-bce.tar
+    FNAME=ifcformant-bpm-bce-py3.5.tar
     cd /usr/local/src && \
     wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/ifcformant-bpm/$FNAME && \
     tar xf $FNAME && \
