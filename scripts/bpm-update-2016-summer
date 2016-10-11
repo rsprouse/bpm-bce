@@ -944,6 +944,7 @@ r-packages)
     ;;
 
 wine)
+    apt_get_update
     install_wine
     ;;
 
@@ -956,6 +957,7 @@ creak_detect)
     ;;
 
 phylogenetics)
+    apt_get_update
     install_phylogenetics
     ;;
 
