@@ -270,6 +270,12 @@ libc6-dev-i386
 
 # Needed to compile htk (results in package authentication warnings).
 libx11-dev:i386
+
+# Additional fonts
+ttf-wqy-microhei
+ttf-umefon
+ttf-baekmuk
+fonts-noto-cjk
 EOF
     apt_get_packages install "$STDPKGS" "BPM-BCE: Installing Linguistics packages from standard repositories..."
     # praat playback may fail when pulseaudio is installed and vm is running on an os x host
