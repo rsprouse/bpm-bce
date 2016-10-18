@@ -205,7 +205,7 @@ add_bpm_repositories(){
     echo DONE: $msg || echo FAIL: $msg
 }
 
-# TODO: check this
+# Appears to still be an issue for spring 2016.
 fix_audio_rate(){
     # Fix issue with modprobe not identifying correct rate for ac97 sound device.
     msg="Fixing audio rate."
