@@ -856,6 +856,7 @@ bpm-public)
     install_r_packages
     install_ifcformant
     fix_gedit
+    fix_audio_rate
     wait_for_unattended-upgrade
     apt-get -q -y autoremove
     ;;
