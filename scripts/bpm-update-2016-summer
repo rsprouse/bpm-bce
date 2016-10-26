@@ -283,7 +283,6 @@ EOF
 #    apt_get_packages "remove --purge --assume-yes" pulseaudio "BPM-BCE: Removing pulseaudio..."
 }
 
-
 install_media_player_gst(){
     msg="Installing media_player_gst plugin."
     echo $msg
@@ -472,10 +471,17 @@ install_opensesame(){
     # Install 3.1 from CogSci channel. The .deb includes Python 2.7, and
     # installing via conda means OpenSesame will use Python 3.
     sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes --channel cogsci python-opensesame
-    FNAME=OpenSesame.desktop
+
     # Add OpenSesame launcher to the Applications menu
+    FNAME=OpenSesame.desktop
     wget --quiet --output-document="/home/ubuntu/.local/share/applications/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME && \
     chmod 0644 /home/ubuntu/.local/share/applications/OpenSesame.desktop
+    # Add OpenSesame default configuration file (with auto updates turned off)
+    FNAME=opensesame.conf.3.1.3
+    mkdir -p /home/ubuntu/.config/cogscinl
+    wget --quiet --output-document="/home/ubuntu/.config/opensesame.conf" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
+    chown -R ubuntu.ubuntu /home/ubuntu/.config/cogscinl
+
 }
 
 install_audiolabel(){
