@@ -285,6 +285,7 @@ EOF
 
 
 install_media_player_gst(){
+    # media_player_gst plugin for opensesame
     msg="Installing media_player_gst plugin."
     echo $msg
     FNAME=media_player_vlc.zip
@@ -294,6 +295,15 @@ install_media_player_gst(){
     git clone https://github.com/dschreij/media_player_gst
     chown -R ubuntu.ubuntu /home/ubuntu/.opensesame && \
     echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_mousetrap(){
+    # mousetrap plugin for opensesame
+    msg="Installing mousetrap plugin."
+    echo $msg
+    FNAME=stable.zip
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install https://github.com/PascalKieslich/mousetrap-os/archive/stable.zip
     cd $ORIGDIR
 }
 
@@ -844,6 +854,7 @@ bpm-public)
     install_ipa
     install_opensesame
     install_media_player_gst
+    install_mousetrap
     install_bokeh
     install_klsyn
     install_audiolabel
@@ -886,8 +897,11 @@ ultratils)
     ;;
 
 media-player-gst)
-    apt_get_update
     install_media_player_gst
+    ;;
+
+mousetrap)
+    install_mousetrap
     ;;
 
 klsyn)
