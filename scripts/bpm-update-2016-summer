@@ -883,7 +883,7 @@ bpm-ucbling)
     install_wine
     ;;
 
-# Base package installation for public release. 
+# Package installation for UCB PhonLab perception workstation (hardware install). 
 bpm-ucb-perception)
     symlink_bpm-update
     install_version
