@@ -835,6 +835,11 @@ Special purpose targets:
   bpm-ucbling
     Use this target after bpm-public to provision an internal BPM release.
 
+  bpm-ucb-perception
+    Use this target instead of bpm-public when provisioning directly to
+    a hardware install used for perception workstations. This is a
+    UC Berkeley-internal application.
+
   apt-get
     Use this target to update the apt database before installing a target
     that includes a .deb file.
@@ -876,6 +881,33 @@ bpm-public)
 bpm-ucbling)
     install_htk
     install_wine
+    ;;
+
+# Base package installation for public release. 
+bpm-ucb-perception)
+    symlink_bpm-update
+    install_version
+    add_bpm_repositories
+    apt_get_update
+    create_user_dirs
+    install_bce_packages
+    install_ipa
+    install_opensesame
+    install_media_player_gst
+    install_mousetrap
+    install_bokeh
+    install_klsyn
+    install_audiolabel
+    install_ultratils
+    install_paramdraw  # required by maedasyn
+    install_maedasyn
+    install_ucblingmisc
+    install_esps
+    install_py_packages
+    install_r_packages
+    install_ifcformant
+    wait_for_unattended-upgrade
+    apt-get -q -y autoremove
     ;;
 
 # Self-update bpm-update.
