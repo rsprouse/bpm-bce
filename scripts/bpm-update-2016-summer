@@ -273,7 +273,7 @@ libx11-dev:i386
 
 # Additional fonts
 ttf-wqy-microhei
-ttf-umefon
+fonts-horai-umefont
 ttf-baekmuk
 fonts-noto-cjk
 EOF
