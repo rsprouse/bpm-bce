@@ -707,7 +707,7 @@ install_creak_detect(){
     # Install creak_detect.
     msg="Installing creak_detect"
     echo $msg
-    FNAME=creak_detect_web_install_2016-bpm
+    FNAME=creak_detect_web_2016-bpm.install
     cd /usr/local/bin && \
     wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/creak_detect-bpm/$FNAME && \
     chmod +rx $FNAME && \
