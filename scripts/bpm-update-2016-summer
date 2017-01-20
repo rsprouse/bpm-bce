@@ -560,7 +560,7 @@ install_ucblingmisc(){
     FNAME2=pyalign
     FNAME3=align.py
     cd /opt && \
-    wget --quiet --output-document="$FNAME1" http://www.ling.upenn.edu/phonetics/p2fa/$FNAME1 && \
+    wget --quiet --output-document="$FNAME1" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME1 && \
     tar xzvf p2fa_1.003.tgz && \
     cd /usr/local/bin && \
     wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
