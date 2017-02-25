@@ -793,6 +793,15 @@ or update:
   maedasyn
     The Maeda synthesizer.
 
+  media-player-gst
+    Media-player-gst plugin for Opensesame.
+    
+  mousetrap
+    Mousetrap plugin for Opensesame.
+    
+  opensesame
+    Opensesame psychology software package.
+    
   r-packages
     A useful set of R packages for linguists.
   
@@ -883,7 +892,7 @@ bpm-ucbling)
     install_wine
     ;;
 
-# Package installation for UCB PhonLab perception workstation (hardware install). 
+# Package installation for UCB PhonLab perception workstation (hardware instalnnnl). 
 bpm-ucb-perception)
     symlink_bpm-update
     install_version
