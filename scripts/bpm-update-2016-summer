@@ -537,6 +537,7 @@ install_ucblingmisc(){
     FNAME4=make_text_grids
     FNAME5=fricative_analysis.py
     FNAME6=vc_transitions
+    FNAME7=multi_align
     mkdir -p /usr/local/lib/site_perl && \
     cd /usr/local/lib/site_perl && \
     wget --quiet --output-document="$FNAME1" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/perl/$FNAME1 && \
@@ -551,6 +552,8 @@ install_ucblingmisc(){
     chmod +x $FNAME5 && \
     wget --quiet --output-document="$FNAME6" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME6 && \
     chmod +x $FNAME6 && \
+    wget --quiet --output-document="$FNAME7" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME7 && \
+    chmod +x $FNAME7 && \
     echo DONE: $msg || echo FAIL: $msg
 
     # Install pyalign.
