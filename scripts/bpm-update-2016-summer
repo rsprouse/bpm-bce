@@ -467,6 +467,20 @@ install_bokeh(){
     sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes bokeh
 }
 
+install_pyqtgraph(){
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes pyqtgraph
+    res=`grep PYQTGRAPH_QT_LIB /home/ubuntu/.bashrc`
+    if [[ $res != "export PYQTGRAPH_QT_LIB=PyQt5" ]]; then
+        cat >> /home/ubuntu/.bashrc << EOF
+
+# BPM: Added by bpm-update for pyqtgraph.
+export PYQTGRAPH_QT_LIB=PyQt5
+
+EOF
+        echo 'pyqtgraph installed. Restart login session to finish.'
+    fi
+}
+
 install_wxpython(){
     # Required by wxklsyn.pyw (only for Python 2.7)
     # conda did not work correctly in py27 env and running directly
@@ -873,6 +887,7 @@ bpm-public)
     install_media_player_gst
     install_mousetrap
     install_bokeh
+    install_pyqtgraph
     install_klsyn
     install_audiolabel
     install_ultratils
@@ -908,6 +923,7 @@ bpm-ucb-perception)
     install_media_player_gst
     install_mousetrap
     install_bokeh
+    install_pyqtgraph
     install_klsyn
     install_audiolabel
     install_ultratils
@@ -954,6 +970,10 @@ klsyn)
 
 bokeh)
     install_bokeh
+    ;;
+
+pyqtgraph)
+    install_pyqtgraph
     ;;
 
 opensesame)
