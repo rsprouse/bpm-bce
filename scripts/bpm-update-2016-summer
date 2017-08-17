@@ -473,6 +473,8 @@ install_bokeh(){
 }
 
 install_pyqtgraph(){
+    # First, upgrade pyqt and dependencies.
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes pyqt
     sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes pyqtgraph
     res=`grep PYQTGRAPH_QT_LIB /home/ubuntu/.bashrc`
     if [[ $res != "export PYQTGRAPH_QT_LIB=PyQt5" ]]; then
