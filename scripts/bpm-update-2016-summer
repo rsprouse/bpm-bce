@@ -463,6 +463,11 @@ install_phon(){
     cd $ORIGDIR
 }
 
+# The numpy quaternion library from https://github.com/moble/quaternion.
+install_quaternion(){
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes -c moble quaternion
+}
+
 install_bokeh(){
     sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes bokeh
 }
@@ -888,6 +893,7 @@ bpm-public)
     install_mousetrap
     install_bokeh
     install_pyqtgraph
+    install_quaternion
     install_klsyn
     install_audiolabel
     install_ultratils
@@ -924,6 +930,7 @@ bpm-ucb-perception)
     install_mousetrap
     install_bokeh
     install_pyqtgraph
+    install_quaternion
     install_klsyn
     install_audiolabel
     install_ultratils
@@ -974,6 +981,10 @@ bokeh)
 
 pyqtgraph)
     install_pyqtgraph
+    ;;
+
+quaternion)
+    install_quaternion
     ;;
 
 opensesame)
