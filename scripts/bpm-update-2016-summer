@@ -465,6 +465,7 @@ install_phon(){
 
 # The numpy quaternion library from https://github.com/moble/quaternion.
 install_quaternion(){
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes numba
     sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes -c moble quaternion
 }
 
