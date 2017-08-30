@@ -727,6 +727,23 @@ install_edgetrak(){
     cd $ORIGDIR
 }
 
+install_otsoft(){
+    # Install OTSoft.
+    # OTSoft will run with:
+    #   wine /opt/OTSoft2.4/OTSoft2.4.exe
+    msg="Install OTSoft."
+    echo $msg
+    # Get required Visual Basic runtime. User must accept license agreement.
+    sudo -u ubuntu winetricks vb6run
+    FNAME=OTSoft2.4.zip
+    cd /opt
+    wget --quiet --output-document="$FNAME" http://linguistics.ucla.edu/people/hayes/otsoft/$FNAME && \
+    unzip $FNAME && \
+    rm $FNAME && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
 # TODO: check this
 install_creak_detect(){
     # Install creak_detect.
@@ -772,6 +789,9 @@ Targets not installed in the BPM public release:
     HTK toolkit, required for Penn Forced Aligner p2fa (pyalign)
     (user must register at http://htk.eng.cam.ac.uk/register.shtml
     in order to download the package)
+
+  otsoft
+    OTSoft, by Bruce Hayes
 
   phylogenetics
     MrBayes, BEAST, Mesquite
@@ -1048,7 +1068,15 @@ wine)
     ;;
 
 edgetrak)
+    apt_get_update
+    install_wine
     install_edgetrak
+    ;;
+
+otsoft)
+    apt_get_update
+    install_wine
+    install_otsoft
     ;;
 
 creak_detect)
