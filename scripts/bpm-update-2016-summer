@@ -632,6 +632,18 @@ install_esps(){
     cd $ORIGDIR
 }
 
+install_reaper(){
+    # Install reaper.
+    msg="Install reaper."
+    echo $msg
+    FNAME=reaper-bpm-bce
+    cd /usr/local/src && \
+    wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/reaper-bpm/$FNAME && \
+    mv $FNAME reaper && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
 
 install_ifcformant(){
     # Install ifcformant.
@@ -1032,6 +1044,10 @@ ucblingmisc)
 
 esps)
     install_esps
+    ;;
+
+reaper)
+    install_reaper
     ;;
 
 ifcformant)
