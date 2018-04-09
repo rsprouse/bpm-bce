@@ -657,6 +657,9 @@ install_ifcformant(){
 }
 
 # TODO: check this
+# TODO: add 'export CFLAGS=m64' before ./configure. Without that step the Makefiles will erroneously contain
+# flag for 32-bit compilation and the 32-bit compatibility libraries will have to be installed. (Even with this
+# change, the -m32 flag will still be in the Makefiles, but -m64 comes later and overrides.)
 install_htk(){
     # Install HTK.
     msg="Install HTK 3.4.1 for p2fa (pyalign)."
