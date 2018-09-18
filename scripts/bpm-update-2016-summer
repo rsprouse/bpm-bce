@@ -379,6 +379,21 @@ install_splalign(){
     cd $ORIGDIR
 }
 
+install_mandarin_align(){
+    # Install Calign.py
+    msg="Installing Calign.py Mandarin aligner. Attempting to retrieve .tgz file from UPenn."
+    echo $msg
+    FNAME=ChineseAligner.tgz 
+    cd /opt/ && \
+    wget --quiet --output-document="$FNAME" http://www.ling.upenn.edu/courses/Spring_2016/ling521/aligner/$FNAME && \
+    tar xzvf $FNAME && \
+    ln -s /opt/Forced_Aligner_Mandarin/Calign.py /usr/local/bin && \
+    perl -pi -e 's#home/myl/src#opt#' /opt/Forced_Aligner_Mandarin/Calign.py && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+
 install_phylogenetics(){
 define PHYLOPKGS <<'EOF'
 mrbayes
@@ -838,6 +853,11 @@ or update:
     Installs from a local .zip file since UC Berkeley Phonology Lab does
     not have permission to distribute this package.
 
+  mandarin_align
+    Calign.py, a derivative of p2fa for aligning Mandarin by Mark Liberman.
+    Installs from a .tgz file based at UPenn since UC Berkeley Phonology Lab
+    does not have permission to distribute this package.
+
   klsyn
     Dennis Klatt's speech synthesizer with a Python interface.
 
@@ -1057,6 +1077,10 @@ htk)
 
 splalign)
     install_splalign
+    ;;
+
+mandarin_align)
+    install_mandarin_align
     ;;
 
 autovot)
