@@ -379,6 +379,22 @@ install_splalign(){
     cd $ORIGDIR
 }
 
+install_koralign(){
+    # Install Korean aligner
+    msg="Installing koralign Korean aligner."
+    echo $msg
+    FNAME=kp2fa.tgz
+    FNAME2=koralign
+    cd /opt/ && \
+    wget --quiet --output-document="$FNAME" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME && \
+    tar xzvf $FNAME && \
+    cd /usr/local/bin && \
+    wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
+    chmod +x $FNAME2 && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
 install_mandarin_align(){
     # Install Calign.py
     msg="Installing Calign.py Mandarin aligner. Attempting to retrieve .tgz file from UPenn."
@@ -853,6 +869,9 @@ or update:
     Installs from a local .zip file since UC Berkeley Phonology Lab does
     not have permission to distribute this package.
 
+  koralign
+    koralign, a derivative of p2fa for aligning Korean by Tae-Jin Yoon.
+
   mandarin_align
     Calign.py, a derivative of p2fa for aligning Mandarin by Mark Liberman.
     Installs from a .tgz file based at UPenn since UC Berkeley Phonology Lab
@@ -1077,6 +1096,10 @@ htk)
 
 splalign)
     install_splalign
+    ;;
+
+koralign)
+    install_koralign
     ;;
 
 mandarin_align)
