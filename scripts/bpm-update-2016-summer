@@ -539,6 +539,16 @@ install_audiolabel(){
     python_clone_and_setup $GITBASE audiolabel
 }
 
+install_phonlab(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE phonlab
+}
+
+install_espspy(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE espspy
+}
+
 install_paramdraw(){
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE paramdraw
@@ -851,6 +861,13 @@ or update:
     formats, including Praat textgrids, Wavesurfer label files, ESPS label
     files, and tabular output.
 
+  phonlab
+    A Python library of miscellaneous functions useful for phonetic
+    analysis.
+
+  espspy
+    A Python library for working with ESPS utilities.
+
   bce-packages
     Packages that are available in the BCE package repository but not already
     installed in BCE (imagemagick, praat, sox, wavesurfer).
@@ -967,6 +984,8 @@ bpm-public)
     install_quaternion
     install_klsyn
     install_audiolabel
+    install_phonlab
+    install_espspy
     install_ultratils
     install_paramdraw  # required by maedasyn
     install_maedasyn
@@ -1004,6 +1023,8 @@ bpm-ucb-perception)
     install_quaternion
     install_klsyn
     install_audiolabel
+    install_phonlab
+    install_espspy
     install_ultratils
     install_paramdraw  # required by maedasyn
     install_maedasyn
@@ -1064,6 +1085,14 @@ opensesame)
 
 audiolabel)
     install_audiolabel
+    ;;
+
+phonlab)
+    install_phonlab
+    ;;
+
+espspy)
+    install_espspy
     ;;
 
 paramdraw)
