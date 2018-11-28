@@ -388,6 +388,10 @@ install_koralign(){
     cd /opt/ && \
     wget --quiet --output-document="$FNAME" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME && \
     tar xzvf $FNAME && \
+    find kp2fa -exec chgrp staff {} + && \
+    find kp2fa -exec chmod g+r {} + && \
+    find kp2fa -exec chmod o+r {} + && \
+    find kp2fa -type d -exec chmod o+x {} + && \
     cd /usr/local/bin && \
     wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
     chmod +x $FNAME2 && \
