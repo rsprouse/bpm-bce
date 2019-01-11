@@ -1,0 +1,5 @@
+#!/bin/bash
+
+source activate py35
+opensesame
+source deactivate
