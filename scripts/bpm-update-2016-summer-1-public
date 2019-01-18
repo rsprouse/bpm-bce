@@ -1160,41 +1160,40 @@ case "$1" in
 
 # Base package installation for public release. 
 bpm-public)
-#RAN0    symlink_bpm-update
-#RAN0    install_version
-#RAN0    add_bpm_repositories
-#RAN0    apt_get_update
-#RAN0    create_user_dirs
-#RAN0    install_bce_packages
-#RAN0    install_ipa
-#RAN1    create_conda_envs
-#RAN1    install_opensesame
-#RAN1    install_audiolabel
-#RAN1    install_jupyterlab
-#RAN2    remove_py27
-#RAN2    remove_pycharm
-#RAN2    remove_globus
-#RAN2    install_librosa
-#RAN2    install_pyqtgraph
-#RAN2    install_quaternion
-#RAN2    install_klsyn
-#RAN2    install_phonlab
-#RAN2    install_espspy
-#RAN2    install_ultratils
+    symlink_bpm-update
+    install_version
+    add_bpm_repositories
+    apt_get_update
+    create_user_dirs
+    install_bce_packages
+    install_ipa
+    create_conda_envs
+    install_opensesame
+    install_audiolabel
+    install_jupyterlab
+    remove_py27
+    remove_pycharm
+    remove_globus
+    install_librosa
+    install_pyqtgraph
+    install_quaternion
+    install_klsyn
+    install_phonlab
+    install_espspy
+    install_ultratils
 ####TODO check pyalign, multi_align, other ucblingmisc scripts
-#RAN2    install_ucblingmisc
-#RAN2    install_montreal_forced_aligner  # 0.6 GB
-#RAN2    install_esps
-#RAN2    install_py_packages
-#RAN2    install_r_packages
-#RAN2    install_ifcformant
-#RAN2    fix_gedit
-#RAN2    fix_audio_rate
-#RAN2    install_bokeh
+    install_ucblingmisc
+    install_montreal_forced_aligner  # 0.6 GB
+    install_esps
+    install_py_packages
+    install_r_packages
+    install_ifcformant
+    fix_gedit
+    fix_audio_rate
+    install_bokeh
     install_reaper
     install_parselmouth
-#RAN2    release_disk_space
-
+    release_disk_space
     ;;
 
 # Additional package installs for internal vm release only (license required).
