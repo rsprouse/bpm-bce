@@ -1,0 +1,1433 @@
+#!/usr/bin/env bash
+
+# Install script for BPM, based off BCE.
+
+# To provision a new BPM VM, get the latest BCE. Boot it, then open a terminal
+# and do: 
+#
+#    cd /usr/local/bin
+#    sudo wget https://raw.githubusercontent.com/rsprouse/bpm-bce/master/scripts/bpm-update-2016-summer-1-public
+#    sudo chmod +x bpm-update-2016-summer-1-public
+#    sudo bpm-update-2016-summer-1-public bpm-public 2>&1 | tee -a /home/ubuntu/bpm-install.log
+#
+# This creates a VM that can be exported and shared without restriction. Additional
+# license-restricted packages can be installed for internal sharing with:
+#
+#    sudo bpm-update bpm-ucbling
+#
+# Note that the bpm-public target symlinks bpm-update-VERSION to bpm-update, and the
+# shorter form can be used thereafter.
+#
+# Individual packages can be installed or updated with:
+#
+#    sudo bpm-update <package>
+#
+# To list available packages:
+#
+#    bpm-update --help
+
+# Also ran this on host so that symlinks can be created in shared folder:
+# VBoxManage setextradata BCE-0.1.3dev VBoxInternal2/SharedFoldersEnableSymlinksCreate/bpm-bce-mods 1
+# from template:
+# VBoxManage setextradata <VM_NAME> VBoxInternal2/SharedFoldersEnableSymlinksCreate/<SHARE_NAME> 1
+
+# BCE_VERSION is provided in the BCE environment, e.g. 2016-summer.
+BPM_SUFFIX=1-public
+VERSION=BCE-${BCE_VERSION}-BPM-${BPM_SUFFIX}
+SCRIPTDIR=/usr/local/bin
+BARE_SCRIPTNAME=bpm-update
+VERSIONED_SCRIPTNAME="$BARE_SCRIPTNAME-$BCE_VERSION-$BPM_SUFFIX"
+ABS_BARE_SCRIPTNAME="$SCRIPTDIR/$BARE_SCRIPTNAME"
+ABS_VERSIONED_SCRIPTNAME="$SCRIPTDIR/$VERSIONED_SCRIPTNAME"
+
+APT_GET="apt-get -q -y"
+ORIGDIR=`pwd`
+
+# Make heredoc variable assignment pretty.
+define(){ read -r -d '' ${1} || true; }
+
+# The unattended-upgrade script might be running, which locks the apt
+# database and prevents installs. This function checks for a running
+# script and waits until it terminates.
+wait_for_unattended-upgrade(){
+    while true; do
+        echo "Checking for unattended-upgrade... "
+        # pgrep returns non-zero if process not found
+        pgrep -f unattended-upgrade > /dev/null
+        if [ $? -ne 0 ]; then
+            echo "unattended-upgrade is not running. Continuing."
+            break
+        else
+            echo "unattended-upgrade is running. Will wait."
+            sleep 5s
+        fi
+    done
+}
+
+# Install/remove .deb packages with apt-get.
+# First argument is install|remove
+# Second argument is a newline-delimited list of packages (# comment lines allowed).
+# Third argument is message to echo to console.
+apt_get_packages(){
+    #wait_for_unattended-upgrade
+    echo "${3}"
+    # The grep bit allows us to have comments in the packages file
+    # The quotation marks around ${1} preserves newlines.
+    $APT_GET ${1} $(grep '^[^#]' <(echo "${2}")) && \
+    $APT_GET clean && \ # help avoid running out of disk space
+    echo DONE: ${3} || echo FAIL: ${3}
+}
+
+# Package installs will fail if we are not up to date.
+apt_get_update(){
+    #wait_for_unattended-upgrade
+    $APT_GET update
+}
+
+# Add BPM_VERSION environment variable.
+install_version() {
+    echo "Installed BPM_VERSION environment variable will be"
+    echo ""
+    echo $VERSION
+    echo ""
+    echo "Press 'y' to confirm."
+    read -n 1 confirm
+    if [ "$confirm" != 'y' ]; then
+        echo "Edit bpm-update to update VERSION. Exiting."
+        exit 1
+    fi
+    echo "BPM_VERSION=$VERSION" >> /etc/environment
+    echo "Installed BPM_VERSION environment variable with value $VERSION."
+}
+
+# Create a symlink from bpm-update-VERSION to bpm-update.
+symlink_bpm-update() {
+    echo "Creating symlink to $ABS_BARE_SCRIPTNAME from $ABS_VERSIONED_SCRIPTNAME."
+    if [ -e $ABS_BARE_SCRIPTNAME ]; then
+        echo "DONE: symlink not created because it already exists."
+    else
+        ln -s $ABS_VERSIONED_SCRIPTNAME $ABS_BARE_SCRIPTNAME && \
+        echo "DONE: Created symlink." || { echo "FAIL: Could not create symlink. Is $VERSIONED_SCRIPTNAME in $SCRIPTDIR? Or are you trying to run "; exit 1; }
+    fi
+}
+
+# Self-update the bpm-update script.
+# Adapted from http://stackoverflow.com/questions/8595751/is-this-a-valid-self-update-approach-for-a-bash-script
+update_bpm-update() {
+    echo "Updating bpm_update"
+
+    UPDATE_BASE=https://raw.githubusercontent.com/rsprouse/bpm-bce/master/scripts
+
+    # Download new version
+    if ! wget --quiet --output-document="$ABS_VERSIONED_SCRIPTNAME".tmp $UPDATE_BASE/$VERSIONED_SCRIPTNAME ; then
+        echo "Failed: Error while trying to wget new version!"
+        echo "File requested: $UPDATE_BASE/$VERSIONED_SCRIPTNAME"
+        exit 1
+    fi
+
+    # Copy over modes from old version
+    OCTAL_MODE=$(stat -c '%a' $ABS_VERSIONED_SCRIPTNAME)
+    if ! chmod $OCTAL_MODE "$ABS_VERSIONED_SCRIPTNAME.tmp" ; then
+        echo "Failed: Error while trying to set mode on $ABS_VERSIONED_SCRIPTNAME.tmp."
+        exit 1
+    fi
+
+    # Create and spawn update script
+    cat > overwrite_bpm-update.sh << EOF
+#!/bin/bash
+
+# Overwrite old file with new
+if mv "$ABS_VERSIONED_SCRIPTNAME.tmp" "$ABS_VERSIONED_SCRIPTNAME"; then
+  echo 'Done. Update of "$ABS_VERSIONED_SCRIPTNAME" complete.'
+else
+  echo 'Failed to update "$ABS_VERSIONED_SCRIPTNAME"!'
+fi
+# Remove overwrite_bpm-update.sh and return to specified directory.
+rm \$0
+cd "\$1"
+EOF
+
+    echo -n "Inserting update process..."
+    exec /bin/bash overwrite_bpm-update.sh "$ORIGDIR"
+}
+
+create_user_dirs(){
+    sudo -u ubuntu mkdir ~/bin
+    sudo -u ubuntu mkdir ~/src
+    sudo -u ubuntu mkdir ~/.config/autostart
+}
+
+remove_py27(){
+    msg="Removing py27 conda environment."
+    echo $msg
+    rm -f /usr/share/applications/python2.7.desktop && \
+    rm -f /home/ubuntu/.local/share/applications/ipython.desktop && \
+    rm -f /home/ubuntu/.local/share/applications/python2.7.desktop && \
+    rm -f /home/ubuntu/.local/share/applications/globusconnect.desktop && \
+    sudo -i -u ubuntu -H conda remove --name py27 --all --yes && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
+remove_pycharm(){
+    msg="Removing pycharm."
+    echo $msg
+    rm -f /usr/share/applications/jetbrains-pycharm-ce.desktop && \
+    rm -rf /opt/pycharm-edu-2.0.4 && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
+remove_globus(){
+    msg="Removing globus."
+    echo $msg
+    rm -f /home/ubuntu/.local/share/applications/globusconnect.desktop && \
+    rm -f /opt/globusconnectpersonal && \
+    rm -rf /opt/globusconnectpersonal-2.2.1 && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
+# Update the conda script.
+create_conda_envs(){
+    msg="Creating conda environments."
+    echo $msg
+    sudo -i -u ubuntu -H bash << EOF
+conda install conda=4.3.30 --yes  # We need to update conda this far to enable the next update.python
+conda install conda=4.5.11 --yes
+conda remove numpy cython matplotlib pandas scipy audioread librosa pymongo --yes
+conda install python=3.7.2 conda=4.5.12 cryptography=2.4.2 virtualenv=16.0.0 pyyaml=3.13 pip=18.1 setuptools=40.6.3 cffi=1.11.5 pillow=5.4.1 w3lib=1.19.0 nltk=3.4 openssl=1.1.1a ipython=7.2.0 cssselect=1.0.3 anaconda-client=1.7.2 lxml=4.3.0 sqlite=3.26.0 zope.interface=4.6.0 jsonschema=2.6.0 queuelib=1.5.0 --yes
+# numpy from the conda-forge channels depends on openblas instead of the much-larger mkl
+conda install --channel conda-forge numpy=1.16.0 --yes
+conda install cython=0.29.2 pandas=0.23.4 scipy=1.1.0 pyqtgraph=0.10.0 --yes
+EOF
+    sudo -i -u ubuntu -H bash << EOF
+conda create --name py35 python=3.5.1 --yes
+EOF
+    echo DONE: $msg
+    cd /home/ubuntu/.local/share/applications
+    mv ipython3.5.desktop ipython3.7.desktop
+    perl -pi -e 's/5/7/g' ipython3.7.desktop
+    mv python3.5.desktop python3.7.desktop
+    perl -pi -e 's/5/7/g' python3.7.desktop
+    cd $ORIGDIR
+#    sudo -i -u ubuntu -H bash << EOF
+#conda create --name py37 --clone root --yes
+#conda clean -tp --yes
+#EOF
+#    dest=/home/ubuntu/.bashrc
+#    if grep -q -e '^source activate' $dest; then
+#        echo "conda environment activation already found in .bashrc."
+#    else
+#        msg="Updating .bashrc with conda environment."
+#	echo $msg
+#        echo "" >> $dest && \
+#        echo "# BPM-BCE: Added by bpm-update" >> $dest && \
+#        echo "source activate py37" >>$dest && \
+#        echo DONE: $msg || echo FAIL: $msg
+#    fi
+}
+
+install_audiolabel(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE audiolabel
+}
+
+install_phonlab(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE phonlab
+}
+
+install_espspy(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE espspy
+}
+
+install_paramdraw(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE paramdraw
+}
+
+install_maedasyn(){
+    # Fix ups for making maedasyn_wx available in py27 env as wxmaedasyn.
+    sudo -u ubuntu -H bash << EOF
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
+    conda install --yes portaudio
+    source deactivate
+EOF
+    sudo -u ubuntu -H bash << EOF
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
+    /home/ubuntu/miniconda3/envs/py27/bin/pip install pyaudio
+    source deactivate
+EOF
+    sudo -u ubuntu -H bash << EOF
+    cd /home/ubuntu/src
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
+    git clone https://github.com/rsprouse/maedasyn
+    cd maedasyn
+    python setup.py install
+    source deactivate
+    cd ..
+    rm -rf maedasyn
+EOF
+    cd $ORIGDIR
+EOF
+}
+
+fix_gedit(){
+    # There is a virtualbox/gedit bug that makes saving to shared folders
+    # difficult. See, e.g., https://www.virtualbox.org/ticket/9203.
+    # With this setting applied every other save should succeed. See David's
+    # answer at http://unix.stackexchange.com/questions/52951/gedit-wont-save-a-file-on-a-virtualbox-share-text-file-busy.
+    dest=/home/ubuntu/.bashrc
+    msg="Inserting gedit preferences into .bashrc."
+    echo $msg
+    echo "" >> $dest && \
+    echo "# BPM-BCE: Added by bootstrap" >> $dest && \
+    echo "# Workaround for gedit save bug." >> $dest && \
+    echo "# See http://unix.stackexchange.com/questions/52951/gedit-wont-save-a-file-on-a-virtualbox-share-text-file-busy." >> $dest && \
+    echo "gsettings set org.gnome.gedit.preferences.editor create-backup-copy true" >> $dest && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
+# Clone and set up python package from github.
+# First argument is base github url.
+# Second argument is specific repo (package) on github.
+python_clone_and_setup(){
+    cd /home/ubuntu/src
+    sudo -u ubuntu git clone ${1}/${2}
+    cd ${2}
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/python setup.py install
+    #sudo -u ubuntu -H /home/ubuntu/miniconda3/envs/py35/bin/python setup.py install
+    cd ..
+    rm -rf ${2}
+    cd $ORIGDIR
+}
+
+add_bpm_repositories(){
+    # Add sil.org repository.
+    msg="BPM-BCE: Adding Linguistics repositories..."
+    echo "$msg"
+    # opensesame repository
+    #add-apt-repository ppa:smathot/cogscinl --yes
+    # neurodebian; no longer needed for opensesame
+    #wget -O- http://neuro.debian.net/lists/xenial.us-ca.full | \
+    #tee /etc/apt/sources.list.d/neurodebian.sources.list && \
+    #apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 0xA5D32F012649A5A9 && \
+    # sil.org
+    echo "deb http://packages.sil.org/ubuntu xenial main" > /etc/apt/sources.list.d/sil.sources.list && \
+    wget http://packages.sil.org/sil.gpg -O- | apt-key add - && \
+    # ppa for ffmpeg--should no longer be necessary, starting with Ubuntu 15.04
+    #add-apt-repository ppa:kirillshkrogalev/ffmpeg-next && \   # Ubuntu 14.10
+    #add-apt-repository ppa:mc3man/trusty-media && \   # Ubuntu 14.04
+    echo DONE: $msg || echo FAIL: $msg
+}
+
+# Appears to still be an issue for spring 2016.
+fix_audio_rate(){
+    # Fix issue with modprobe not identifying correct rate for ac97 sound device.
+    msg="Fixing audio rate."
+    echo $msg
+    FIX_CNT=$(grep 'options snd-intel8x0 ac97_clock=48000' /etc/modprobe.d/alsa-base.conf|wc -l)
+    if [ "$FIX_CNT" == "0" ]
+    then
+        echo '# Fix audio rate issue where ac97 clock not correctly identified.' >> /etc/modprobe.d/alsa-base.conf
+        echo 'options snd-intel8x0 ac97_clock=48000' >> /etc/modprobe.d/alsa-base.conf
+        echo 'Audio fix applied. Reboot the virtual machine to finish.'
+    else
+        echo 'Audio fix already applied. No changes have been made.'
+    fi
+}
+
+install_ecog(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE ecog_ucsf
+}
+
+install_bce_packages(){
+    # These are packages that install from repositories already enabled in BCE.
+define STDPKGS <<'EOF'
+ffmpeg
+imagemagick
+pcregrep
+praat
+sox
+vim-gtk
+wavesurfer
+
+# wish8.5 is needed for wavesurfer but is not installed automatically. This is
+# probably a Depends bug in the wavesurfer package.
+tcl8.5
+tk8.5
+
+# We need to install osspd-alsa so that praat is not removed automatically when
+# pulseaudio is removed.
+osspd-alsa
+
+# SciTE is an alternative to gedit, which has problems writing to shared folders.
+scite
+
+# The following packages are needed in order to build espsfree-* on the vm.
+# They will no longer be necessary and can be removed when espsfree-*
+# can be downloaded as a binary package.
+#build-essential  # already in BCE
+byacc
+#debhelper  # already in BCE
+devscripts
+flex
+libatlas-dev
+
+# Needed to compile 32-bit esps.
+#libc6-dev-i386
+
+# Needed to compile htk (results in package authentication warnings).
+libx11-dev:i386
+
+# Additional fonts
+ttf-wqy-microhei
+fonts-horai-umefont
+ttf-baekmuk
+fonts-noto-cjk
+EOF
+    apt_get_packages install "$STDPKGS" "BPM-BCE: Installing Linguistics packages from standard repositories..."
+    # praat playback may fail when pulseaudio is installed and vm is running on an os x host
+    # praat seems okay with pulseaudio on os x now (20160628; os x 10.11; virtualbox 4.3)
+#    apt_get_packages "remove --purge --assume-yes" pulseaudio "BPM-BCE: Removing pulseaudio..."
+}
+
+
+install_media_player_gst(){
+    # media_player_gst plugin for opensesame
+    msg="Installing media_player_gst plugin."
+    echo $msg
+    FNAME=media_player_vlc.zip
+    PLUGDIR=/home/ubuntu/.opensesame/plugins
+    mkdir -p $PLUGDIR && \
+    cd $PLUGDIR && \
+    git clone https://github.com/dschreij/media_player_gst
+    chown -R ubuntu.ubuntu /home/ubuntu/.opensesame && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_mousetrap(){
+    # mousetrap plugin for opensesame
+    msg="Installing mousetrap plugin."
+    echo $msg
+    FNAME=stable.zip
+    sudo -i -u ubuntu -H bash << EOF
+source activate py35
+pip install https://github.com/PascalKieslich/mousetrap-os/archive/stable.zip
+source deactivate
+EOF
+    cd $ORIGDIR
+}
+
+install_fieldworks(){
+    # Packages from the sil.org repository.
+define SILPKGS <<'EOF'
+fieldworks-applications
+EOF
+    apt_get_packages install "$SILPKGS" "BPM-BCE: Installing Linguistics packages from sil.org repository..."
+}
+
+install_elan(){
+    # Install ELAN linguistic annotator from MPI.
+    #
+define ELANPKGS <<'EOF'
+vlc
+EOF
+    apt_get_packages install "$ELANPKGS" "BPM-BCE: Installing packages for ELAN..."
+    FNAME1=Simple-ELAN_1-1_linux.bin
+    FNAME2=ELAN.desktop
+    cd /usr/local/src && \
+    wget --quiet --output-document="$FNAME1" http://www.mpi.nl/tools/elan/simple/$FNAME1 && \
+    chmod +x $FNAME1 && \
+    sudo -u ubuntu -H ./$FNAME1 && \
+    rm $FNAME1 && \
+    wget --quiet --output-document="/home/ubuntu/.local/share/applications/$FNAME2" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME2 && \
+    chmod 0644 /home/ubuntu/.local/share/applications/$FNAME2 && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_ipa(){
+    # Packages from the sil.org repository.
+define SILPKGS <<'EOF'
+fonts-sil-charis
+fonts-sil-charis-compact
+fonts-sil-doulos
+fonts-sil-doulos-compact
+ibus-kmfl
+ibus-table
+ibus-table-ipa-x-sampa
+kmfl-keyboard-ipa
+EOF
+    apt_get_packages install "$SILPKGS" "BPM-BCE: Installing IPA packages from sil.org repository..."
+
+    # Patch makes explicit call to system Python rather than
+    # anaconda in ibus-setup.
+    # Anaconda install might not have correct libraries installed.
+    msg="Patching ibus-setup."
+    echo $msg
+    perl -pi -e 's#exec python3#exec /usr/bin/python3#' /usr/bin/ibus-setup && \
+    echo DONE: $msg || echo FAIL: $msg
+
+    msg="Adding IPA input method."
+    echo $msg
+    SCHEMADIR=/usr/share/glib-2.0/schemas
+    FNAME1=30_org.freedesktop.ibus.general.gschema.override
+    cd $SCHEMADIR && \
+    wget --quiet --output-document="$FNAME1" https://github.com/rsprouse/ucblingmisc/raw/master/bpm-bce/resources/$FNAME1 && \
+    glib-compile-schemas $SCHEMADIR && \
+    echo DONE: $msg || echo FAIL: $msg
+
+    msg="Adding autostart of IBus daemon."
+    echo $msg
+    FNAME2=Ibus_daemon.desktop
+    wget --quiet --output-document="/home/ubuntu/.config/autostart/$FNAME2" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME2 && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_splalign(){
+    # Install splalign.py
+    msg="Installing splalign.py. We do not have permission to distribute this software. We will attempt to install from a local .zip file."
+    echo $msg
+    cd /opt/ && \
+    unzip /home/ubuntu/Desktop/splalign.zip && \
+    ln -s /opt/SPLaligner/HTK_sed_for_octalCrossBasic.sh /usr/local/bin/ && \
+    ln -s /opt/SPLaligner/splalign.py /usr/local/bin/ && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_koralign(){
+    # Install Korean aligner
+    msg="Installing koralign Korean aligner."
+    echo $msg
+    FNAME=kp2fa.tgz
+    FNAME2=koralign
+    cd /opt/ && \
+    wget --quiet --output-document="$FNAME" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME && \
+    tar xzvf $FNAME && \
+    find kp2fa -exec chgrp staff {} + && \
+    find kp2fa -exec chmod g+r {} + && \
+    find kp2fa -exec chmod o+r {} + && \
+    find kp2fa -type d -exec chmod o+x {} + && \
+    cd /usr/local/bin && \
+    wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
+    chmod +x $FNAME2 && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_mandarin_align(){
+    # Install Calign.py
+    msg="Installing Calign.py Mandarin aligner. Attempting to retrieve .tgz file from UPenn."
+    echo $msg
+    FNAME=ChineseAligner.tgz 
+    cd /opt/ && \
+    wget --quiet --output-document="$FNAME" http://www.ling.upenn.edu/courses/Spring_2016/ling521/aligner/$FNAME && \
+    tar xzvf $FNAME && \
+    ln -s /opt/Forced_Aligner_Mandarin/Calign.py /usr/local/bin && \
+    perl -pi -e 's#home/myl/src#opt#' /opt/Forced_Aligner_Mandarin/Calign.py && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+
+install_phylogenetics(){
+define PHYLOPKGS <<'EOF'
+mrbayes
+beast-mcmc
+EOF
+    apt_get_packages install "$PHYLOPKGS" "BPM-BCE: Installing Linguistics packages for phylogenetics..."
+    msg="Installing Mesquite"
+    echo $msg
+    FNAME=Mesquite310-Linux.tgz
+    cd /opt && \
+    wget --quiet --output-document="$FNAME" https://github.com/MesquiteProject/MesquiteCore/releases/download/v3.10-build-765/$FNAME && \
+    tar xf $FNAME && \
+    chmod +x /opt/Mesquite_Folder/mesquite.sh && \
+    chown -R ubuntu.ubuntu /opt/Mesquite_Folder/ && \
+    rm $FNAME && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_py_packages(){
+    # Additional Python packages.
+define PAPKGS <<'EOF'
+portaudio19-dev
+libportaudio2
+EOF
+    apt_get_packages install "$PAPKGS" "BPM-BCE: Installing portaudio..." && \
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install pyaudio && \
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/bin/pip install pygame && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_klsyn(){
+    # Required by klsyn
+    sudo -i -u ubuntu -H pip install xlrd
+    sudo -i -u ubuntu -H pip install xlwt
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE klsyn
+}
+
+# Experimental install of autovot.
+install_autovot(){
+    GITBASE=https://github.com/rsprouse
+    cd /home/ubuntu/src
+    sudo -u ubuntu git clone $GITBASE/autovot
+    cd autovot/python
+    sudo -u ubuntu -H /home/ubuntu/miniconda3/envs/py27/bin/python setup.py install
+    ln -s /home/ubuntu/src/autovot/autovot/bin/Vot* /home/ubuntu/bin
+#    cd ../..
+#    rm -rf autovot
+    cd $ORIGDIR
+}
+
+install_phon(){
+    msg="Installing Phon"
+    echo $msg
+    FNAME=Phon_unix_2_1_8.tar.gz
+    RELEASE=2.1.8
+    PHONDIR="Phon 2.1"
+    LAUNCHER=Phon.desktop
+    LCMD="perl -pi -e 's/<phondir>/$PHONDIR/' '/home/ubuntu/.local/share/applications/$LAUNCHER'"
+    cd /opt && \
+    wget --quiet --output-document="$FNAME" https://github.com/phon-ca/phon/releases/download/$RELEASE/$FNAME && \
+    tar xzf $FNAME && \
+    rm $FNAME && \
+    chown -R ubuntu.ubuntu "/opt/$PHONDIR/" && \
+    wget --quiet --output-document="/home/ubuntu/.local/share/applications/$LAUNCHER" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$LAUNCHER && \
+    eval $LCMD && \
+    chmod 0644 /home/ubuntu/.local/share/applications/$LAUNCHER && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_jupyterlab(){
+    msg="Installing jupyterlab."
+    echo $msg
+    sudo -i -u ubuntu -H conda install --yes jupyterlab=0.35.3 nodejs=10.13.0 && \
+    echo DONE: $msg || echo FAIL: $msg
+    msg="Installing jupyterlab-variableInspector."
+    echo $msg
+    REPO=jupyterlab-variableInspector
+    sudo -i -u ubuntu -H bash << EOF
+cd /home/ubuntu/src
+git clone https://github.com/lckr/$REPO
+cd $REPO
+npm install --save-dev webpack
+jupyter lab clean
+npm install
+npm run build
+jupyter labextension install .
+jupyter lab build
+jupyter lab clean
+EOF
+    cd /home/ubuntu/src
+    rm -rf $REPO
+    cd $ORIGDIR
+}
+
+# The numpy quaternion library.
+install_quaternion(){
+    sudo -i -u ubuntu conda install --yes numba
+    sudo -i -u ubuntu conda install --yes -c conda-forge quaternion
+}
+
+# The librosa library.
+install_librosa(){
+    sudo -i -u ubuntu conda install --yes -c conda-forge librosa
+}
+
+install_bokeh(){
+    # Install bokeh library. This function must run after install_jupyterlab.
+    #sudo -i -u ubuntu -H conda install --name py35 --yes bokeh=0.13.0
+    sudo -i -u ubuntu -H conda install --yes bokeh=1.0.4
+    #sudo -i -u ubuntu -H conda install --yes ipywidgets=7.4.2
+    sudo -i -u ubuntu -H bash << EOF
+jupyter lab clean
+jupyter labextension install jupyterlab_bokeh
+jupyter lab build
+jupyter lab clean
+EOF
+}
+
+install_pyqtgraph(){
+    # First, upgrade pyqt and dependencies.
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes pyqt
+    sudo -u ubuntu /home/ubuntu/miniconda3/bin/conda install --yes pyqtgraph
+    res=`grep PYQTGRAPH_QT_LIB /home/ubuntu/.bashrc`
+    if [[ $res != "export PYQTGRAPH_QT_LIB=PyQt5" ]]; then
+        cat >> /home/ubuntu/.bashrc << EOF
+
+# BPM: Added by bpm-update for pyqtgraph.
+export PYQTGRAPH_QT_LIB=PyQt5
+
+EOF
+        echo 'pyqtgraph installed. Restart login session to finish.'
+    fi
+}
+
+install_opensesame(){
+    # Install 3.1 from CogSci channel. The .deb includes Python 2.7, and
+    # installing via conda means OpenSesame will use Python 3.
+    # As of 20190109 the conda OpenSesame requires Python 3.5, which prevents
+    # upgrades to Python > 3.5. We'll create a conda environment from which
+    # OpenSesame can run.
+    msg="Installing OpenSesame package."
+    echo $msg
+    sudo -i -u ubuntu conda install --channel cogsci --name py35 python-opensesame pillow --yes
+    msg="Installing OpenSesame in menu."
+    echo $msg
+    FNAME1=OpenSesame.py35.desktop
+    # Add OpenSesame launcher to the Applications menu
+    wget --quiet --output-document="/home/ubuntu/.local/share/applications/$FNAME1" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME1 && \
+    chmod 0644 /home/ubuntu/.local/share/applications/$FNAME1 && \
+    echo DONE: $msg || echo FAIL: $msg
+    sudo -i -u ubuntu -H ln -s /home/ubuntu/miniconda3/envs/py35/bin/opensesame /home/ubuntu/bin
+    install_media_player_gst
+    install_mousetrap
+}
+
+install_audiolabel(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE audiolabel
+}
+
+install_phonlab(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE phonlab
+}
+
+install_espspy(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE espspy
+}
+
+install_paramdraw(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE paramdraw
+}
+
+install_maedasyn(){
+    # Fix ups for making maedasyn_wx available in py27 env as wxmaedasyn.
+    sudo -u ubuntu -H bash << EOF
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
+    conda install --yes portaudio
+    source deactivate
+EOF
+    sudo -u ubuntu -H bash << EOF
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
+    /home/ubuntu/miniconda3/envs/py27/bin/pip install pyaudio
+    source deactivate
+EOF
+    sudo -u ubuntu -H bash << EOF
+    cd /home/ubuntu/src
+    source /home/ubuntu/miniconda3/envs/py27/bin/activate py27
+    git clone https://github.com/rsprouse/maedasyn
+    cd maedasyn
+    python setup.py install
+    source deactivate
+    cd ..
+    rm -rf maedasyn
+EOF
+    cd $ORIGDIR
+    # Copy the script that launches maedasyn_wx in the right Python env.
+    FNAME=wxmaedasyn
+    sudo -u ubuntu wget --quiet --output-document="/home/ubuntu/bin/$FNAME" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME
+    chmod +x /home/ubuntu/bin/$FNAME
+}
+
+install_ucblingmisc(){
+    # Install from ucblingmisc.
+    msg="Install miscellaneous Linguistics python utilities."
+    echo $msg
+    FNAME1=SoundLabel.pm
+    FNAME2=concat_pyalign_textgrids
+    FNAME3=convertlabel
+    FNAME4=make_text_grids
+    FNAME5=fricative_analysis.py
+    FNAME6=vc_transitions
+    FNAME7=multi_align
+    mkdir -p /usr/local/lib/site_perl && \
+    cd /usr/local/lib/site_perl && \
+    wget --quiet --output-document="$FNAME1" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/perl/$FNAME1 && \
+    cd /usr/local/bin && \
+    wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/perl/$FNAME2 && \
+    chmod +x $FNAME2 && \
+    wget --quiet --output-document="$FNAME3" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/perl/$FNAME3 && \
+    chmod +x $FNAME3 && \
+    wget --quiet --output-document="$FNAME4" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/perl/$FNAME4 && \
+    chmod +x $FNAME4 && \
+    wget --quiet --output-document="$FNAME5" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME5 && \
+    chmod +x $FNAME5 && \
+    wget --quiet --output-document="$FNAME6" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME6 && \
+    chmod +x $FNAME6 && \
+    wget --quiet --output-document="$FNAME7" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME7 && \
+    chmod +x $FNAME7 && \
+    echo DONE: $msg || echo FAIL: $msg
+
+    # Install pyalign.
+    msg="Install pyalign."
+    echo $msg
+    FNAME1=p2fa_1.003.tgz
+    FNAME2=pyalign
+    FNAME3=align.py
+    cd /opt && \
+    wget --quiet --output-document="$FNAME1" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME1 && \
+    tar xzvf p2fa_1.003.tgz && \
+    rm "$FNAME1" && \
+    cd /usr/local/bin && \
+    wget --quiet --output-document="$FNAME2" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/python/$FNAME2 && \
+    chmod +x $FNAME2 && \
+    cd /opt/p2fa && \
+    wget --quiet --output-document="$FNAME3" https://raw.githubusercontent.com/rsprouse/ucblingmisc/master/p2fa/$FNAME3 && \
+    chmod +x $FNAME3 && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_ultratils(){
+    GITBASE=https://github.com/rsprouse
+    python_clone_and_setup $GITBASE ultratils
+}
+
+install_esps(){
+    # esps install
+    cd /usr/local/src
+    msg="Install espsfree."
+    echo $msg
+    git clone https://github.com/rsprouse/espsfree && \
+    cd espsfree && \
+    cp /usr/local/src/espsfree/espsfree-dev/emake.bpm /usr/local/bin/emake && \
+    emake && \
+    emake install && \
+    rm -rf /usr/local/src/espsfree && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_montreal_forced_aligner(){
+    # Install the Montreal Forced Aligner.
+    cd /opt
+    msg="Install Montreal Forced Aligner."
+    echo $msg
+    FNAME=montreal-forced-aligner_linux.tar.gz
+    VER=v1.1.0-beta.2
+    MAND=mandarin.zip
+    wget --quiet --output-document="$FNAME" https://github.com/MontrealCorpusTools/Montreal-Forced-Aligner/releases/download/$VER/"$FNAME" && \
+    tar xzvf "$FNAME" && \
+    rm "$FNAME" && \
+    ln -s /opt/montreal-forced-aligner/bin/* /usr/local/bin/ && \
+    cd montreal-forced-aligner/pretrained_models && \
+    unzip english.zip && \
+    wget --quiet --output-document="$MAND" http://mlmlab.org/mfa/mfa-models/"$MAND" && \
+    unzip $MAND && \
+    rm $MAND && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_reaper(){
+    # Install reaper.
+    msg="Install reaper."
+    echo $msg
+    FNAME=reaper-bpm-bce
+    cd /usr/local/bin && \
+    wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/reaper-bpm/$FNAME && \
+    mv $FNAME reaper && \
+    chmod 0755 reaper && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_parselmouth(){
+    # Install parselmouth.
+    msg="Install parselmouth."
+    echo $msg
+    sudo -i -u ubuntu -H pip install -U praat-parselmouth && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
+install_ifcformant(){
+    # Install ifcformant.
+    msg="Install ifcformant."
+    echo $msg
+    FNAME=ifcformant-bpm-bce-py3.7.tar
+    cd /usr/local/src && \
+    wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/ifcformant-bpm/$FNAME && \
+    tar xf $FNAME && \
+    cd ifcformant-bpm-bce-py3.7 && \
+    ./install-bpm.sh && \
+    cd .. && \
+    rm $FNAME && \
+    rm -rf ifcformant-bpm-bce && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+# TODO: check this
+# TODO: add 'export CFLAGS=m64' before ./configure. Without that step the Makefiles will erroneously contain
+# flag for 32-bit compilation and the 32-bit compatibility libraries will have to be installed. (Even with this
+# change, the -m32 flag will still be in the Makefiles, but -m64 comes later and overrides.)
+install_htk(){
+    # Install HTK.
+    msg="Install HTK 3.4.1 for p2fa (pyalign)."
+define htkprompt <<'EOF'
+The HTK toolkit requires a username and password to download. These can be obtained at no cost
+by registering at http://htk.eng.cam.ac.uk/register.shtml.
+
+If you choose to skip registration HTK will not be installed. The Penn Force Aligner p2fa (pyalign)
+requires HTK and will not work without it.
+
+Provide a username to download HTK 3.4.1 or press <Enter> to skip HTK installation.
+EOF
+    echo $msg
+    echo "$htkprompt"
+    read username
+    if [ $username != '' ]; then
+        echo "Provide your HTK password:"
+        read password
+        if [ $password != '' ]; then
+            FNAME=HTK-3.4.1.tar.gz
+            cd /usr/local/src && \
+            wget --user $username --password $password --quiet --output-document="$FNAME" http://htk.eng.cam.ac.uk/ftp/software/$FNAME && \
+            tar xf $FNAME && \
+            cd htk && \
+            # Patch up HRec.c. See https://groups.google.com/forum/#!topic/fave-users/wDScrDkF44Q
+            # and https://github.com/JoFrhwld/FAVE/wiki/HTK-on-OS-X#fixing-htk-source for details.
+            perl -pi.orig -e 's/if \(dur<=0 && labid != splabid\) HError\(8522,"LatFromPaths: Align have dur<=0 "\)/if (dur<=0 && labpr != splabid) HError(8522,"LatFromPaths: Align have dur<=0 ")/' HTKLib/HRec.c && \
+            ./configure && \
+            # Patch up a Makefile parse error (make expects indentation with a tab character).
+            perl -pi.orig -e 's/        if /\tif /' HLMTools/Makefile && \
+            make all && \
+            make install && \
+            cd .. && \
+            rm $FNAME && \
+            rm -rf htk && \
+            echo DONE: $msg || echo FAIL: $msg
+            cd $ORIGDIR
+        fi
+    fi
+}
+
+# R packages for linguists.
+install_r_packages(){
+define r_cmd <<'EOF'
+install.packages(
+    c(
+      "languageR"
+    ),
+    repos = "http://cran.cnr.Berkeley.edu")
+EOF
+echo $r_cmd | sudo /usr/bin/Rscript --no-restore --no-save -
+}
+
+# wine depends on ttt-mscorefont-installer and requires user to accept a license agreement
+install_wine(){
+    # Needed for EdgeTrak
+    apt_get_packages install wine "BPM-BCE: Installing wine from standard repositories..."
+}
+
+install_edgetrak(){
+    # Install EdgeTrak.
+    # EdgeTrak will run with:
+    #   wine /opt/EdgeTrak/EdgeTrak.exe
+    # Note: user must configure wine to enable 'Emulate a virtual desktop'.
+    msg="Install EdgeTrak."
+    echo $msg
+    FNAME=Edgetrak.zip
+    cd /opt
+    #wget --quiet --output-document="$FNAME" http://speech.umaryland.edu/programs/$FNAME && \
+    wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/edgetrak/$FNAME && \
+    unzip $FNAME && \
+    rm $FNAME && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+install_otsoft(){
+    # Install OTSoft.
+    # OTSoft will run with:
+    #   wine /opt/OTSoft2.4/OTSoft2.4.exe
+    msg="Install OTSoft."
+    echo $msg
+    # Get required Visual Basic runtime. User must accept license agreement.
+    sudo -u ubuntu winetricks vb6run
+    FNAME=OTSoft2.4.zip
+    cd /opt
+    wget --quiet --output-document="$FNAME" http://linguistics.ucla.edu/people/hayes/otsoft/$FNAME && \
+    unzip $FNAME && \
+    rm $FNAME && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+# TODO: check this
+install_creak_detect(){
+    # Install creak_detect.
+    msg="Installing creak_detect"
+    echo $msg
+    FNAME=creak_detect_web_2016-bpm.install
+    cd /usr/local/bin && \
+    wget --quiet --output-document="$FNAME" https://github.com/rsprouse/ucblingmisc/raw/master/creak_detect-bpm/$FNAME && \
+    chmod +rx $FNAME && \
+    ./$FNAME &&\
+    rm $FNAME && \
+    perl -pi.orig -e 's/  MCRROOT="\$1"/  MCRROOT=\/usr\/local\/MATLAB\/MATLAB_Runtime\/v85\//' /usr/local/creak_detect/application/run_creak_detect.sh && \
+    perl -pi -e 's/\\<deployedMCRroot\\> args/wavfile1 [wavfile2] [...wavfileN]/' /usr/local/creak_detect/application/run_creak_detect.sh && \
+    perl -pi -e 's/echo ([S\-L"])/#echo \1/' /usr/local/creak_detect/application/run_creak_detect.sh && \
+    perl -pi -e 's/shift 1/#shift 1/' /usr/local/creak_detect/application/run_creak_detect.sh && \
+    #perl -pi -e 's/-gt 0/-gt 2/' /usr/local/creak_detect/application/run_creak_detect.sh && \
+    perl -pi -e 's/\$\{exe_dir\}\/creak_detect/\/usr\/local\/creak_detect\/application\/creak_detect/' /usr/local/creak_detect/application/run_creak_detect.sh && \
+    ln -s /usr/local/creak_detect/application/run_creak_detect.sh /usr/local/bin/creak_detect && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
+}
+
+remove_old_kernels(){
+# Remove the linux-image-* packages that are not the image currently running.
+for pkg in `dpkg -l | tail -n +6 | grep -E '^ii\s+linux-image-[0-9]+' | grep -Fv $(uname -r) | pcregrep -o1 '^ii\s+(linux-image-\S+)\s+'`; do apt-get purge -y $pkg; done
+}
+
+release_disk_space(){
+    # Free up disk space.
+    apt-get -y clean
+    apt-get -y autoremove
+    sudo -i -u ubuntu -H conda clean -tp --yes
+    sudo -i -u ubuntu -H jupyter lab clean
+    remove_old_kernels
+}
+
+define usage <<'EOF'
+
+  bpm-update
+    Provisioning script for installing and updating Berkeley Phonetics Machine
+    (BPM) packages.
+
+  Usage:
+    bpm-update <target>     # install or update package <target>
+    bpm-update --help       # full usage info and list of targets
+
+EOF
+
+define targets <<'EOF'
+
+Targets not installed in the BPM public release:
+
+  fieldworks
+    SIL FieldWorks packages
+
+  htk
+    HTK toolkit, required for Penn Forced Aligner p2fa (pyalign)
+    (user must register at http://htk.eng.cam.ac.uk/register.shtml
+    in order to download the package)
+
+  otsoft
+    OTSoft, by Bruce Hayes
+
+  phylogenetics
+    MrBayes, BEAST, Mesquite
+
+  wine
+    Windows emulator, required for EdgeTrak
+    (user must accept license agreement)
+
+  elan
+    ELAN linguistic annotation tool from MPI.
+
+Targets that are installed in the BPM public release. Use these to reinstall
+or update:
+
+  audiolabel
+    A Python library for reading (and limited writing) of various annotation
+    formats, including Praat textgrids, Wavesurfer label files, ESPS label
+    files, and tabular output.
+
+  phonlab
+    A Python library of miscellaneous functions useful for phonetic
+    analysis.
+
+  espspy
+    A Python library for working with ESPS utilities.
+
+  bce-packages
+    Packages that are available in the BCE package repository but not already
+    installed in BCE (imagemagick, praat, sox, wavesurfer).
+
+  edgetrak
+    EdgeTrak tool for working with ultrasound images
+
+  esps
+    Entropic Signal Processing System (ESPS) command line utilities
+
+  ifcformant
+    Inverse Filter Control formant tracker
+
+  splalign
+    SPLaligner, a derivative of p2fa for aligning French by Peter Milne.
+    Installs from a local .zip file since UC Berkeley Phonology Lab does
+    not have permission to distribute this package.
+
+  koralign
+    koralign, a derivative of p2fa for aligning Korean by Tae-Jin Yoon.
+
+  mandarin_align
+    Calign.py, a derivative of p2fa for aligning Mandarin by Mark Liberman.
+    Installs from a .tgz file based at UPenn since UC Berkeley Phonology Lab
+    does not have permission to distribute this package.
+
+  montreal_forced_aligner
+    The Montreal Forced Aligner, including pretrained models for English
+    and Mandarin.
+
+  klsyn
+    Dennis Klatt's speech synthesizer with a Python interface.
+
+  paramdraw
+    A Python library for drawing parameter curves.
+
+  maedasyn
+    The Maeda synthesizer.
+
+  media-player-gst
+    Media-player-gst plugin for Opensesame.
+    
+  mousetrap
+    Mousetrap plugin for Opensesame.
+    
+  opensesame
+    Opensesame psychology software package.
+    
+  r-packages
+    A useful set of R packages for linguists.
+  
+  py-packages
+    A useful set of Python packages.
+
+  ultratils
+    Install python code for processing Ultrasonix ultrasound data.
+
+  ipa
+    SIL fonts containing IPA characters and input methods (keyboard mappings).
+
+  ling113-get-dict
+    A download script for grabbing dict.local for Ling113, spring 2015.
+
+  ling290-vot
+    The VOT script for Ling290, Fall 2015.
+
+  ecog
+    Various utilities for working with ecog data.
+
+  ucblingmisc
+    Various scripts used in the UC Berkeley Phonology Lab.
+
+  phon
+    The Phon database system for doing phonetics and phonology. See
+    https://www.phon.ca/phontrac.
+
+  autovot
+    Autovot is a software package for automatic measurement of voice onset time.
+
+Special purpose targets:
+
+  bpm-update
+    Use this target to self-update bpm-update.
+
+  bpm-public
+    Use this target to provision BPM additions to a BCE release.
+
+  bpm-ucbling
+    Use this target after bpm-public to provision an internal BPM release.
+
+  bpm-ucb-perception
+    Use this target instead of bpm-public when provisioning directly to
+    a hardware install used for perception workstations. This is a
+    UC Berkeley-internal application.
+
+  apt-get
+    Use this target to update the apt database before installing a target
+    that includes a .deb file.
+
+EOF
+
+case "$1" in
+
+# Base package installation for public release. 
+bpm-public)
+#RAN0    symlink_bpm-update
+#RAN0    install_version
+#RAN0    add_bpm_repositories
+#RAN0    apt_get_update
+#RAN0    create_user_dirs
+#RAN0    install_bce_packages
+#RAN0    install_ipa
+#RAN1    create_conda_envs
+#RAN1    install_opensesame
+#RAN1    install_audiolabel
+#RAN1    install_jupyterlab
+#RAN2    remove_py27
+#RAN2    remove_pycharm
+#RAN2    remove_globus
+#RAN2    install_librosa
+#RAN2    install_pyqtgraph
+#RAN2    install_quaternion
+#RAN2    install_klsyn
+#RAN2    install_phonlab
+#RAN2    install_espspy
+#RAN2    install_ultratils
+####TODO check pyalign, multi_align, other ucblingmisc scripts
+#RAN2    install_ucblingmisc
+#RAN2    install_montreal_forced_aligner  # 0.6 GB
+#RAN2    install_esps
+#RAN2    install_py_packages
+#RAN2    install_r_packages
+#RAN2    install_ifcformant
+#RAN2    fix_gedit
+#RAN2    fix_audio_rate
+#RAN2    install_bokeh
+    install_reaper
+    install_parselmouth
+#RAN2    release_disk_space
+
+    ;;
+
+# Additional package installs for internal vm release only (license required).
+bpm-ucbling)
+    install_htk
+    install_wine
+    ;;
+
+# Package installation for UCB PhonLab perception workstation (hardware instalnnnl). 
+bpm-ucb-perception)
+    symlink_bpm-update
+    install_version
+    add_bpm_repositories
+    apt_get_update
+    create_user_dirs
+    install_bce_packages
+    install_ipa
+    install_opensesame
+    install_media_player_gst
+    install_mousetrap
+    install_bokeh
+    install_pyqtgraph
+    install_quaternion
+    install_klsyn
+    install_audiolabel
+    install_phonlab
+    install_espspy
+    install_ultratils
+    install_ucblingmisc
+    install_esps
+    install_py_packages
+    install_r_packages
+    install_ifcformant
+#    wait_for_unattended-upgrade
+    apt-get -y autoremove
+    ;;
+
+# Self-update bpm-update.
+bpm-update)
+    update_bpm-update
+    ;;
+
+bce-packages)
+    install_bce_packages
+    ;;
+
+# Individual package install/update.
+fix-audio-rate)
+    fix_audio_rate
+    ;;
+
+ultratils)
+    install_ultratils
+    ;;
+
+media-player-gst)
+    install_media_player_gst
+    ;;
+
+mousetrap)
+    install_mousetrap
+    ;;
+
+klsyn)
+    install_klsyn
+    ;;
+
+jupyterlab)
+    install_jupyterlab
+    ;;
+
+bokeh)
+    install_bokeh
+    ;;
+
+pyqtgraph)
+    install_pyqtgraph
+    ;;
+
+librosa)
+    install_librosa
+    ;;
+
+quaternion)
+    install_quaternion
+    ;;
+
+opensesame)
+    install_opensesame
+    ;;
+
+audiolabel)
+    install_audiolabel
+    ;;
+
+phonlab)
+    install_phonlab
+    ;;
+
+espspy)
+    install_espspy
+    ;;
+
+paramdraw)
+    install_paramdraw
+    ;;
+
+maedasyn)
+    install_maedasyn
+    ;;
+
+ucblingmisc)
+    install_ucblingmisc
+    ;;
+
+esps)
+    install_esps
+    ;;
+
+parselmouth)
+    install_parselmouth
+    ;;
+
+reaper)
+    install_reaper
+    ;;
+
+ifcformant)
+    install_ifcformant
+    ;;
+
+htk)
+    install_htk
+    ;;
+
+splalign)
+    install_splalign
+    ;;
+
+koralign)
+    install_koralign
+    ;;
+
+mandarin_align)
+    install_mandarin_align
+    ;;
+
+autovot)
+    install_autovot
+    ;;
+
+phon)
+    install_phon
+    ;;
+
+py-packages)
+    install_py_packages
+    ;;
+
+r-packages)
+    install_r_packages
+    ;;
+
+wine)
+    apt_get_update
+    install_wine
+    ;;
+
+edgetrak)
+    apt_get_update
+    install_wine
+    install_edgetrak
+    ;;
+
+otsoft)
+    apt_get_update
+    install_wine
+    install_otsoft
+    ;;
+
+creak_detect)
+    install_creak_detect
+    ;;
+
+phylogenetics)
+    apt_get_update
+    install_phylogenetics
+    ;;
+
+fieldworks)
+    apt_get_update
+    install_fieldworks
+    ;;
+
+elan)
+    apt_get_update
+    install_elan
+    ;;
+
+ipa)
+    apt_get_update
+    install_ipa
+    ;;
+
+ling113-get-dict)
+    ling113_get_dict
+    ;;
+
+ling290-vot)
+    ling290_vot
+    ;;
+
+ecog)
+    install_ecog
+    ;;
+
+# Miscellaneous commands that don't do any installs.
+apt-get)
+    apt_get_update
+    ;;
+
+--help)
+    echo " "
+    echo "$usage"
+    echo " "
+    echo "$targets"
+    echo " "
+    ;;
+
+*)
+    echo " "
+    echo "$usage"
+    echo " "
+    ;;
+
+esac
