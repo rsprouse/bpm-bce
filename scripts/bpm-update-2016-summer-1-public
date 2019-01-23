@@ -157,6 +157,16 @@ create_user_dirs(){
     sudo -u ubuntu mkdir ~/.config/autostart
 }
 
+add_bpm_examples_link(){
+    msg="Adding BPM examples link to the Desktop."
+    echo $msg
+    FNAME1=bpm-examples.desktop
+    wget --quiet --output-document="/home/ubuntu/Desktop/$FNAME1" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME1 && \
+    chown root.root /home/ubuntu/Desktop/$FNAME1 && \
+    chmod 0755 /home/ubuntu/Desktop/$FNAME1 && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
 remove_py27(){
     msg="Removing py27 conda environment."
     echo $msg
@@ -1165,6 +1175,7 @@ bpm-public)
     add_bpm_repositories
     apt_get_update
     create_user_dirs
+    add_bpm_examples_link
     install_bce_packages
     install_ipa
     create_conda_envs
