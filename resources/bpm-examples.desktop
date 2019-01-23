@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=BPM Examples
+GenericName=BPM Examples
+Comment=Link to online BPM documentation
+Exec=x-www-browser https://github.com/rsprouse/bpm-examples
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=gnome-help
+Categories=X-XFCE;X-Xfce-Toplevel;
+NoDisplay=false
+Path=/var/cache/bce.berkeley.edu
