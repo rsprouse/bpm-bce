@@ -157,16 +157,6 @@ create_user_dirs(){
     sudo -u ubuntu mkdir ~/.config/autostart
 }
 
-add_bpm_examples_link(){
-    msg="Adding BPM examples link to the Desktop."
-    echo $msg
-    FNAME1=bpm-examples.desktop
-    wget --quiet --output-document="/home/ubuntu/Desktop/$FNAME1" https://raw.githubusercontent.com/rsprouse/bpm-bce/master/resources/$FNAME1 && \
-    chown root.root /home/ubuntu/Desktop/$FNAME1 && \
-    chmod 0755 /home/ubuntu/Desktop/$FNAME1 && \
-    echo DONE: $msg || echo FAIL: $msg
-}
-
 remove_py27(){
     msg="Removing py27 conda environment."
     echo $msg
@@ -377,17 +367,13 @@ scite
 # The following packages are needed in order to build espsfree-* on the vm.
 # They will no longer be necessary and can be removed when espsfree-*
 # can be downloaded as a binary package.
-#build-essential  # already in BCE
 byacc
-#debhelper  # already in BCE
 devscripts
 flex
 libatlas-dev
 
-# Needed to compile 32-bit esps.
-#libc6-dev-i386
-
 # Needed to compile htk (results in package authentication warnings).
+libc6-dev-i386
 libx11-dev:i386
 
 # Additional fonts
@@ -911,7 +897,7 @@ EOF
             # Patch up HRec.c. See https://groups.google.com/forum/#!topic/fave-users/wDScrDkF44Q
             # and https://github.com/JoFrhwld/FAVE/wiki/HTK-on-OS-X#fixing-htk-source for details.
             perl -pi.orig -e 's/if \(dur<=0 && labid != splabid\) HError\(8522,"LatFromPaths: Align have dur<=0 "\)/if (dur<=0 && labpr != splabid) HError(8522,"LatFromPaths: Align have dur<=0 ")/' HTKLib/HRec.c && \
-            ./configure && \
+            ./configure --prefix=/usr/local --build=i386-linux-gnu && \
             # Patch up a Makefile parse error (make expects indentation with a tab character).
             perl -pi.orig -e 's/        if /\tif /' HLMTools/Makefile && \
             make all && \
@@ -923,6 +909,30 @@ EOF
             cd $ORIGDIR
         fi
     fi
+}
+
+install_htk_local(){
+    # Install HTK from local archive file, which should be in the current
+    # working directory.
+    msg="Install HTK 3.4.1 for p2fa (pyalign)."
+    echo $msg
+    FNAME=HTK-3.4.1.tar.gz
+    echo Installing from local copy of $FNAME in current working directory.
+    tar xf $FNAME && \
+    cd htk && \
+    # Patch up HRec.c. See https://groups.google.com/forum/#!topic/fave-users/wDScrDkF44Q
+    # and https://github.com/JoFrhwld/FAVE/wiki/HTK-on-OS-X#fixing-htk-source for details.
+    perl -pi.orig -e 's/if \(dur<=0 && labid != splabid\) HError\(8522,"LatFromPaths: Align have dur<=0 "\)/if (dur<=0 && labpr != splabid) HError(8522,"LatFromPaths: Align have dur<=0 ")/' HTKLib/HRec.c && \
+    ./configure --prefix=/usr/local --build=i386-linux-gnu && \
+    # Patch up a Makefile parse error (make expects indentation with a tab character).
+    perl -pi.orig -e 's/        if /\tif /' HLMTools/Makefile && \
+    make all && \
+    make install && \
+    cd .. && \
+    rm $FNAME && \
+    rm -rf htk && \
+    echo DONE: $msg || echo FAIL: $msg
+    cd $ORIGDIR
 }
 
 # R packages for linguists.
@@ -1004,7 +1014,7 @@ remove_old_kernels(){
 for pkg in `dpkg -l | tail -n +6 | grep -E '^ii\s+linux-image-[0-9]+' | grep -Fv $(uname -r) | pcregrep -o1 '^ii\s+(linux-image-\S+)\s+'`; do apt-get purge -y $pkg; done
 }
 
-release_disk_space(){
+recover_disk_space(){
     # Free up disk space.
     apt-get -y clean
     apt-get -y autoremove
@@ -1036,6 +1046,12 @@ Targets not installed in the BPM public release:
     HTK toolkit, required for Penn Forced Aligner p2fa (pyalign)
     (user must register at http://htk.eng.cam.ac.uk/register.shtml
     in order to download the package)
+
+  htk_local
+    Same as the 'htk' target, but does not download HTK archive file and
+    instead installs from a previously-downloaded copy of the archive.
+    Expects to find the HTK-3.4.1.tar.gz archive in the current working
+    directory.
 
   otsoft
     OTSoft, by Bruce Hayes
@@ -1175,7 +1191,6 @@ bpm-public)
     add_bpm_repositories
     apt_get_update
     create_user_dirs
-    add_bpm_examples_link
     install_bce_packages
     install_ipa
     create_conda_envs
@@ -1204,7 +1219,7 @@ bpm-public)
     install_bokeh
     install_reaper
     install_parselmouth
-    release_disk_space
+    recover_disk_space
     ;;
 
 # Additional package installs for internal vm release only (license required).
@@ -1249,6 +1264,11 @@ bpm-update)
 
 bce-packages)
     install_bce_packages
+    ;;
+
+# Perform some disk cleanup.
+recover_disk_space)
+    recover_disk_space
     ;;
 
 # Individual package install/update.
@@ -1338,6 +1358,10 @@ ifcformant)
 
 htk)
     install_htk
+    ;;
+
+htk_local)
+    install_htk_local
     ;;
 
 splalign)
