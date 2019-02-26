@@ -225,6 +225,19 @@ EOF
 #    fi
 }
 
+fix_opensesame(){
+    echo Installing pyqt in py35 environment.
+    sudo -i -u ubuntu conda install --channel cogsci --name py35 python-opensesame=3.1.9 --yes
+    echo Installing pyaudio and pygame in py35 environment.
+    sudo -i -u ubuntu -H bash << EOF
+source activate py35
+pip install PyQt5 QScintilla
+pip install pyaudio
+pip install pygame
+source deactivate
+EOF
+}
+
 install_audiolabel(){
     GITBASE=https://github.com/rsprouse
     python_clone_and_setup $GITBASE audiolabel
@@ -1325,6 +1338,10 @@ quaternion)
 
 opensesame)
     install_opensesame
+    ;;
+
+fix-opensesame)
+    fix_opensesame
     ;;
 
 audiolabel)
