@@ -231,7 +231,7 @@ fix_opensesame(){
     echo Installing pyaudio and pygame in py35 environment.
     sudo -i -u ubuntu -H bash << EOF
 source activate py35
-pip install PyQt5 QScintilla
+pip install QScintilla
 pip install pyaudio
 pip install pygame
 source deactivate
