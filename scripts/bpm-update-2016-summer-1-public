@@ -234,6 +234,7 @@ source activate py35
 pip install QScintilla
 pip install pyaudio
 pip install pygame
+pip uninstall -y PyQt5
 source deactivate
 EOF
 }
