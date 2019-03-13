@@ -1035,6 +1035,31 @@ remove_old_kernels(){
 for pkg in `dpkg -l | tail -n +6 | grep -E '^ii\s+linux-image-[0-9]+' | grep -Fv $(uname -r) | pcregrep -o1 '^ii\s+(linux-image-\S+)\s+'`; do apt-get purge -y $pkg; done
 }
 
+update_locale(){
+    msg="Making default locale LANG en_US.UTF-8."
+    echo $msg
+    update-locale LANG=en_US.UTF-8 && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
+remove_chrome(){
+    msg="Removing google chrome from /opt."
+    echo $msg
+    apt-get purge -y google-chrome-stable && \
+    rm -rf /opt/google/chrome && \
+    rm -rf /home/ubuntu/.cache/google-chrome && \
+    rm -rf /home/ubuntu/.config/google-chrome && \
+    rm -f /home/ubuntu/.gnome/apps/chrome-* && \
+    rm -f /home/ubuntu/.local/share/applications/chrome-* && \
+    rm -f /home/ubuntu/.local/share/xfce4/helpers/google-chrome.desktop && \
+    rm -f /usr/share/applications/google-chrome.desktop && \
+    #grep -Rl 'Google Chrome' /home/ubuntu/.config/xfce4/panel/launcher-* | xargs rm && \
+    xfconf-query --channel xfce4-panel --property '/plugins/plugin-12' --reset && \
+    perl -pi -e 's/WebBrowser=google-chrome//' /home/ubuntu/.config/xfce4/helpers.rc && \
+# TODO: make firefox default browser; remove chrome icon/menu items
+    echo DONE: $msg || echo FAIL: $msg
+}
+
 recover_disk_space(){
     # Free up disk space.
     apt-get -y clean
@@ -1244,6 +1269,8 @@ bpm-public)
     install_bokeh
     install_reaper
     install_parselmouth
+    update_locale
+    remove_chrome
     recover_disk_space
     ;;
 
@@ -1289,6 +1316,16 @@ bpm-update)
 
 bce-packages)
     install_bce_packages
+    ;;
+
+# Change default locale to en_US.UTF-8
+update_locale)
+    update_locale
+    ;;
+
+# Change default locale to en_US.UTF-8
+remove_chrome)
+    remove_chrome
     ;;
 
 # Perform some disk cleanup.
