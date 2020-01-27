@@ -254,6 +254,13 @@ install_espspy(){
     python_clone_and_setup $GITBASE espspy
 }
 
+install_lyon_model(){
+    msg="Installing Lyon cochlear model."
+    echo $msg
+    sudo -i -u ubuntu -H pip install -U lyon && \
+    echo DONE: $msg || echo FAIL: $msg
+}
+
 install_pysptk(){
     msg="Installing pysptk."
     echo $msg
@@ -1127,6 +1134,9 @@ or update:
   espspy
     A Python library for working with ESPS utilities.
 
+  lyon-model
+    Python port of Lyon's model calculation from Auditory Toolbox.
+
   pysptk
     A python wrapper for Speech Signal Processing Toolkit (SPTK).
 
@@ -1255,6 +1265,7 @@ bpm-public)
     install_klsyn
     install_phonlab
     install_espspy
+    install_lyon_model
     install_pysptk
     install_ultratils
 ####TODO check pyalign, multi_align, other ucblingmisc scripts
@@ -1392,6 +1403,10 @@ phonlab)
 
 espspy)
     install_espspy
+    ;;
+
+lyon-model)
+    install_lyon_model
     ;;
 
 pysptk)
