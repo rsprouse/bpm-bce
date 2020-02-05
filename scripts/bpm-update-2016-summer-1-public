@@ -258,6 +258,8 @@ install_lyon_model(){
     msg="Installing Lyon cochlear model."
     echo $msg
     sudo -i -u ubuntu -H pip install -U lyon && \
+    perl -pi.orig -e 's/ear_filters, _ = design_lyon_filters/ear_filters, cfs = design_lyon_filters/' /home/ubuntu/miniconda3/lib/python3.7/site-packages/lyon/calc.py && \
+    perl -pi -e 's/return y\[:, 2:\]$/return y[:, 2:], cfs/' /home/ubuntu/miniconda3/lib/python3.7/site-packages/lyon/calc.py && \
     echo DONE: $msg || echo FAIL: $msg
 }
 
